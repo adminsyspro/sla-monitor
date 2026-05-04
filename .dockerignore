@@ -1,0 +1,10 @@
+node_modules
+.next
+data
+.git
+docs
+prober
+*.tsbuildinfo
+.env
+.env.local
+README.md
