@@ -45,8 +45,18 @@ async def test_dispatches_ssl():
 
 
 @pytest.mark.asyncio
+async def test_dispatches_ping():
+    monitor = Monitor(id="m1", type="ping", url="1.1.1.1", timeout_ms=1000, config={})
+    fake = CheckResult(monitor_id="m1", timestamp=1, status="operational")
+    with patch("prober.runner.probe_ping", new=AsyncMock(return_value=fake)) as m:
+        r = await run_check(monitor)
+    assert m.called
+    assert r is fake
+
+
+@pytest.mark.asyncio
 async def test_unknown_type_returns_major():
-    monitor = Monitor(id="m1", type="ping", url="x", timeout_ms=1000, config={})
+    monitor = Monitor(id="m1", type="bogus", url="x", timeout_ms=1000, config={})  # type: ignore[arg-type]
     r = await run_check(monitor)
     assert r.status == "major"
     assert r.error and "unsupported" in r.error.lower()

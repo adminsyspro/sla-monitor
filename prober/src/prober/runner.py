@@ -5,6 +5,7 @@ from prober.probes.http import probe_http
 from prober.probes.tcp import probe_tcp
 from prober.probes.dns import probe_dns
 from prober.probes.ssl import probe_ssl
+from prober.probes.ping import probe_ping
 
 log = structlog.get_logger()
 
@@ -15,6 +16,7 @@ _DISPATCH: dict[str, str] = {
     "tcp": "probe_tcp",
     "dns": "probe_dns",
     "ssl": "probe_ssl",
+    "ping": "probe_ping",
 }
 
 _globals = globals()
