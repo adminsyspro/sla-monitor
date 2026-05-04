@@ -1,0 +1,29 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: file:./data/sla-monitor.db
+      PROBER_TOKEN: ${PROBER_TOKEN}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  prober:
+    build: ./prober
+    environment:
+      NEXT_INTERNAL_URL: http://web:3000
+      PROBER_TOKEN: ${PROBER_TOKEN}
+      POLL_INTERVAL_SECONDS: "5"
+      MAX_CONCURRENT_CHECKS: "50"
+      LOG_LEVEL: INFO
+    depends_on:
+      - web
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

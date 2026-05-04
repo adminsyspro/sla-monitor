@@ -62,6 +62,17 @@ npm run build
 npm start
 ```
 
+## Running with Docker Compose
+
+```bash
+cp .env.example .env
+# Edit .env to set PROBER_TOKEN and NEXTAUTH_SECRET
+# (use: openssl rand -hex 32)
+docker compose up --build
+```
+
+The web UI is at `http://localhost:3000`. The prober runs in the background and starts checking your monitors at their configured intervals.
+
 ## Structure du projet
 
 ```
