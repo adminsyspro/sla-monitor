@@ -70,10 +70,12 @@ function initSchema(db: Database.Database) {
       certificate_expiry_warning INTEGER DEFAULT NULL,
       created_by                 TEXT NOT NULL DEFAULT 'system',
       created_at                 INTEGER NOT NULL DEFAULT (unixepoch()),
-      updated_at                 INTEGER NOT NULL DEFAULT (unixepoch())
+      updated_at                 INTEGER NOT NULL DEFAULT (unixepoch()),
+      last_check_at              INTEGER DEFAULT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_monitors_group ON monitors(group_id);
     CREATE INDEX IF NOT EXISTS idx_monitors_status ON monitors(status);
+    CREATE INDEX IF NOT EXISTS idx_monitors_due ON monitors(enabled, last_check_at);
 
     -- Monitor Checks (health check results)
     CREATE TABLE IF NOT EXISTS monitor_checks (
@@ -84,7 +86,8 @@ function initSchema(db: Database.Database) {
       response_time INTEGER DEFAULT NULL,
       status_code   INTEGER DEFAULT NULL,
       error         TEXT DEFAULT NULL,
-      region        TEXT DEFAULT NULL
+      region        TEXT DEFAULT NULL,
+      metadata      TEXT DEFAULT '{}'
     );
     CREATE INDEX IF NOT EXISTS idx_checks_monitor_ts ON monitor_checks(monitor_id, timestamp DESC);
 
@@ -164,6 +167,20 @@ function initSchema(db: Database.Database) {
       updated_at         INTEGER NOT NULL DEFAULT (unixepoch())
     );
   `);
+
+  // Idempotent migrations for existing databases
+  const monitorsColumns = db.prepare('PRAGMA table_info(monitors)').all();
+  const hasLastCheckAt = monitorsColumns.some((col: any) => col.name === 'last_check_at');
+  if (!hasLastCheckAt) {
+    db.prepare('ALTER TABLE monitors ADD COLUMN last_check_at INTEGER DEFAULT NULL').run();
+  }
+  db.prepare('CREATE INDEX IF NOT EXISTS idx_monitors_due ON monitors(enabled, last_check_at)').run();
+
+  const checksColumns = db.prepare('PRAGMA table_info(monitor_checks)').all();
+  const hasMetadata = checksColumns.some((col: any) => col.name === 'metadata');
+  if (!hasMetadata) {
+    db.prepare('ALTER TABLE monitor_checks ADD COLUMN metadata TEXT DEFAULT \'{}\'').run();
+  }
 
   seedDefaultAdmin(db);
   seedDemoData(db);
