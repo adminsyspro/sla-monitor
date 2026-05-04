@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { getOrCreateProberToken, validateProberToken } from '@/lib/auth/prober-token';
 
@@ -11,6 +11,7 @@ function makeDb(): Database.Database {
 describe('prober-token', () => {
   let db: Database.Database;
   beforeEach(() => { db = makeDb(); });
+  afterEach(() => { vi.unstubAllEnvs(); });
 
   it('generates a new token when none exists', () => {
     const t = getOrCreateProberToken(db);
@@ -24,10 +25,9 @@ describe('prober-token', () => {
   });
 
   it('reads from PROBER_TOKEN env var if set', () => {
-    process.env.PROBER_TOKEN = 'envvar-token-value';
+    vi.stubEnv('PROBER_TOKEN', 'envvar-token-value');
     const t = getOrCreateProberToken(db);
     expect(t).toBe('envvar-token-value');
-    delete process.env.PROBER_TOKEN;
   });
 
   it('validates a matching bearer header', () => {
