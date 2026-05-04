@@ -357,7 +357,7 @@ export default function DashboardPage() {
       case 'top-issues':
         return <TopIssuesCard className="border-0 shadow-none" />
       case 'recent-activity':
-        return <ActivityTimeline className="border-0 shadow-none" limit={5} activities={activities.length > 0 ? activities : undefined} />
+        return <ActivityTimeline className="border-0 shadow-none" limit={5} activities={activities} />
       case 'sla-progress':
         return <SLAProgressWidget uptime={overallUptime} target={targetUptime} />
       case 'monitors-overview':
