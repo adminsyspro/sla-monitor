@@ -71,3 +71,14 @@ async def test_raises_on_401(result):
     reporter = Reporter(client, max_retries=3, base_backoff=0.01)
     with pytest.raises(SystemExit):
         await reporter.send(result)
+
+
+@pytest.mark.asyncio
+async def test_retries_on_connect_timeout(result):
+    """ConnectTimeout (the common real-world failure when Next is unreachable) must trigger retry, not propagate."""
+    client = AsyncMock()
+    client.post_check.side_effect = [httpx.ConnectTimeout("connect timeout"), False]
+    reporter = Reporter(client, max_retries=3, base_backoff=0.01)
+    sent = await reporter.send(result)
+    assert sent is True
+    assert client.post_check.await_count == 2

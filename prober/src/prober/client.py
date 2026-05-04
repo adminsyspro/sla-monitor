@@ -1,6 +1,5 @@
 import dataclasses
 from typing import Optional
-from typing_extensions import Self
 import httpx
 from prober.models import Monitor, CheckResult
 
@@ -12,7 +11,7 @@ class NextApiClient:
         self._timeout = timeout
         self._client: Optional[httpx.AsyncClient] = None
 
-    async def __aenter__(self) -> Self:
+    async def __aenter__(self) -> "NextApiClient":
         self._client = httpx.AsyncClient(
             base_url=self._base_url,
             headers={"authorization": f"Bearer {self._token}"},

@@ -37,7 +37,7 @@ class Reporter:
                     return False
                 log.warning("reporter.server_error", status=status, attempt=attempt + 1,
                             monitor_id=result.monitor_id)
-            except (httpx.ConnectError, httpx.ReadTimeout, httpx.ReadError) as e:
+            except httpx.TransportError as e:
                 log.warning("reporter.network_error", error=str(e), attempt=attempt + 1,
                             monitor_id=result.monitor_id)
             if attempt < self._max_retries - 1:
