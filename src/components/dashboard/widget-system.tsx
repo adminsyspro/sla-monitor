@@ -23,7 +23,6 @@ import {
   Globe,
   Shield,
   Calendar,
-  Map,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -48,6 +47,8 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 // Widget types
+// Note: 'regional-uptime' has been removed — the system only emits region: 'local'
+// and does not have multi-region observability data.
 export type WidgetType =
   | 'uptime-gauge'
   | 'response-time'
@@ -58,7 +59,6 @@ export type WidgetType =
   | 'service-status'
   | 'recent-activity'
   | 'top-issues'
-  | 'regional-uptime'
   | 'incident-heatmap'
   | 'monitors-overview'
   | 'sla-progress'
@@ -87,7 +87,6 @@ export const widgetTemplates: Omit<Widget, 'id' | 'order'>[] = [
   { type: 'service-status', title: 'Statut des services', size: 'medium', enabled: true },
   { type: 'recent-activity', title: 'Activité récente', size: 'tall', enabled: true },
   { type: 'top-issues', title: 'Services à surveiller', size: 'medium', enabled: true },
-  { type: 'regional-uptime', title: 'Uptime par région', size: 'medium', enabled: true },
   { type: 'incident-heatmap', title: 'Distribution incidents', size: 'wide', enabled: true },
   { type: 'monitors-overview', title: 'Aperçu monitors', size: 'large', enabled: true },
   { type: 'sla-progress', title: 'Objectifs SLA', size: 'medium', enabled: true },
@@ -105,7 +104,6 @@ function getWidgetIcon(type: WidgetType) {
     case 'service-status': return <CheckCircle2 className="h-4 w-4" />
     case 'recent-activity': return <Clock className="h-4 w-4" />
     case 'top-issues': return <TrendingUp className="h-4 w-4" />
-    case 'regional-uptime': return <Map className="h-4 w-4" />
     case 'incident-heatmap': return <BarChart3 className="h-4 w-4" />
     case 'monitors-overview': return <Globe className="h-4 w-4" />
     case 'sla-progress': return <Activity className="h-4 w-4" />

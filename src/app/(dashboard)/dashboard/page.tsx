@@ -34,7 +34,7 @@ import { ResponseTimeChart } from '@/components/charts/response-time-chart'
 import { ServiceUptimeChart } from '@/components/charts/service-uptime-chart'
 import { IncidentHeatmap } from '@/components/charts/incident-heatmap'
 import { AdvancedKPIs } from '@/components/charts/advanced-kpis'
-import { UptimeGauge, RegionalUptime } from '@/components/charts/uptime-gauge'
+import { UptimeGauge } from '@/components/charts/uptime-gauge'
 import { TopIssuesCard } from '@/components/charts/top-issues'
 import { ActivityTimeline, ActivityItem } from '@/components/charts/activity-timeline'
 // MonitorCard no longer needed - monitors-overview uses stats API data
@@ -54,6 +54,8 @@ import {
 import { formatDate, cn } from '@/lib/utils'
 
 // Default widgets configuration
+// Note: 'regional-uptime' (w8) has been removed — the system always emits region: 'local'
+// and does not have multi-region observability data.
 const defaultWidgets: Widget[] = [
   { id: 'w1', type: 'kpi-mttr', title: 'MTTR', size: 'small', enabled: true, order: 1 },
   { id: 'w2', type: 'kpi-mttd', title: 'MTTD', size: 'small', enabled: true, order: 2 },
@@ -62,20 +64,11 @@ const defaultWidgets: Widget[] = [
   { id: 'w5', type: 'response-time', title: 'Temps de réponse', size: 'wide', enabled: true, order: 5 },
   { id: 'w6', type: 'uptime-gauge', title: 'Uptime Global', size: 'small', enabled: true, order: 6 },
   { id: 'w7', type: 'service-status', title: 'Disponibilité services', size: 'medium', enabled: true, order: 7 },
-  { id: 'w8', type: 'regional-uptime', title: 'Uptime par région', size: 'medium', enabled: true, order: 8 },
-  { id: 'w9', type: 'incident-heatmap', title: 'Distribution incidents', size: 'wide', enabled: true, order: 9 },
-  { id: 'w10', type: 'top-issues', title: 'Services à surveiller', size: 'medium', enabled: true, order: 10 },
-  { id: 'w11', type: 'recent-activity', title: 'Activité récente', size: 'wide', enabled: true, order: 11 },
-  { id: 'w12', type: 'sla-progress', title: 'Objectifs SLA', size: 'medium', enabled: true, order: 12 },
-]
-
-// Regional data
-const regionalData = [
-  { name: '🇫🇷 France (GRA4)', uptime: 99.98, checks: 125000 },
-  { name: '🇫🇷 France (RBX)', uptime: 99.95, checks: 98000 },
-  { name: '🇨🇦 Canada (HGR)', uptime: 99.92, checks: 87000 },
-  { name: '🇩🇪 Allemagne', uptime: 99.89, checks: 65000 },
-  { name: '🇺🇸 US East', uptime: 99.97, checks: 112000 },
+  { id: 'w8', type: 'incident-heatmap', title: 'Distribution incidents', size: 'wide', enabled: true, order: 8 },
+  { id: 'w9', type: 'top-issues', title: 'Services à surveiller', size: 'medium', enabled: true, order: 9 },
+  { id: 'w10', type: 'recent-activity', title: 'Activité récente', size: 'wide', enabled: true, order: 10 },
+  { id: 'w11', type: 'sla-progress', title: 'Objectifs SLA', size: 'medium', enabled: true, order: 11 },
+  { id: 'w12', type: 'maintenance-scheduled', title: 'Maintenances', size: 'small', enabled: true, order: 12 },
 ]
 
 // Widget Content Components
@@ -128,7 +121,17 @@ function IncidentsWidget({ count }: { count: number }) {
   )
 }
 
-function ErrorBudgetWidget({ used, remaining }: { used: number; remaining: number }) {
+function ErrorBudgetWidget({
+  used,
+  remaining,
+  usedMinutes,
+  totalMinutes,
+}: {
+  used: number
+  remaining: number
+  usedMinutes: number
+  totalMinutes: number
+}) {
   const isLow = remaining < 30
   return (
     <div className="space-y-3 h-full flex flex-col justify-center">
@@ -144,7 +147,7 @@ function ErrorBudgetWidget({ used, remaining }: { used: number; remaining: numbe
         indicatorClassName={isLow ? 'bg-yellow-500' : 'bg-green-500'}
       />
       <p className="text-xs text-muted-foreground">
-        {used}min utilisées sur 43min
+        {usedMinutes.toFixed(1)}min utilisées sur {totalMinutes.toFixed(0)}min
       </p>
     </div>
   )
@@ -171,16 +174,9 @@ function SLAProgressWidget({ uptime, target }: { uptime: number; target: number 
         </p>
       </div>
       <Separator />
-      <div className="grid grid-cols-2 gap-4 text-center">
-        <div>
-          <p className="text-xl font-bold text-green-500">11/12</p>
-          <p className="text-xs text-muted-foreground">Mois conformes</p>
-        </div>
-        <div>
-          <p className="text-xl font-bold">4h 23m</p>
-          <p className="text-xs text-muted-foreground">Downtime total</p>
-        </div>
-      </div>
+      <p className="text-xs text-muted-foreground text-center">
+        Aucun historique mensuel pour l'instant
+      </p>
     </div>
   )
 }
@@ -192,8 +188,18 @@ interface DashboardStats {
   activeIncidents: number
   mttr: number
   errorBudgetRemaining: number
+  errorBudgetTotalMinutes: number
+  errorBudgetUsedMinutes: number
   checksPerMinute: number
   avgResponseTime: number
+}
+
+interface MaintenanceWindow {
+  id: string
+  title: string
+  scheduledStart: string
+  scheduledEnd: string
+  status: string
 }
 
 export default function DashboardPage() {
@@ -205,13 +211,15 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [nextMaintenance, setNextMaintenance] = useState<MaintenanceWindow | null | undefined>(undefined)
 
   // Fetch dashboard data
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [statsRes, activityRes] = await Promise.all([
+      const [statsRes, activityRes, maintRes] = await Promise.all([
         fetch('/api/dashboard/stats'),
         fetch('/api/dashboard/activity'),
+        fetch('/api/maintenance?status=scheduled'),
       ])
       if (statsRes.ok) {
         const statsData = await statsRes.json()
@@ -220,6 +228,15 @@ export default function DashboardPage() {
       if (activityRes.ok) {
         const activityData = await activityRes.json()
         setActivities(Array.isArray(activityData) ? activityData : activityData.activities ?? [])
+      }
+      if (maintRes.ok) {
+        const maintData: MaintenanceWindow[] = await maintRes.json()
+        const now = new Date()
+        // Pick the next upcoming scheduled maintenance window
+        const upcoming = maintData
+          .filter(m => new Date(m.scheduledStart) > now)
+          .sort((a, b) => new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime())
+        setNextMaintenance(upcoming[0] ?? null)
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
@@ -290,18 +307,17 @@ export default function DashboardPage() {
             type="mttr"
             value={`${stats?.mttr ?? 0} min`}
             label="Mean Time To Repair"
-            trend={{ value: 15, positive: true }}
             icon={Timer}
             color="bg-blue-500/10 text-blue-500"
           />
         )
       case 'kpi-mttd':
         return (
+          // TODO: real MTTD — requires incidents.detected_at column (not yet in schema)
           <KPIWidget
             type="mttd"
-            value={`${stats ? Math.round(stats.mttr * 0.18 * 10) / 10 : 2.3} min`}
+            value="—"
             label="Mean Time To Detect"
-            trend={{ value: 8, positive: true }}
             icon={Eye}
             color="bg-purple-500/10 text-purple-500"
           />
@@ -309,7 +325,14 @@ export default function DashboardPage() {
       case 'incidents-active':
         return <IncidentsWidget count={activeIncidents} />
       case 'error-budget':
-        return <ErrorBudgetWidget used={parseFloat((100 - (stats?.errorBudgetRemaining ?? 87)).toFixed(1))} remaining={stats?.errorBudgetRemaining ?? 87} />
+        return (
+          <ErrorBudgetWidget
+            used={parseFloat((100 - (stats?.errorBudgetRemaining ?? 87)).toFixed(1))}
+            remaining={stats?.errorBudgetRemaining ?? 87}
+            usedMinutes={stats?.errorBudgetUsedMinutes ?? 0}
+            totalMinutes={stats?.errorBudgetTotalMinutes ?? 43.2}
+          />
+        )
       case 'uptime-gauge':
         return (
           <div className="flex flex-col items-center justify-center h-full">
@@ -329,8 +352,6 @@ export default function DashboardPage() {
         return <ResponseTimeChart className="border-0 shadow-none" />
       case 'service-status':
         return <ServiceUptimeChart className="border-0 shadow-none" />
-      case 'regional-uptime':
-        return <RegionalUptime regions={regionalData} className="border-0 shadow-none" />
       case 'incident-heatmap':
         return <IncidentHeatmap className="border-0 shadow-none" />
       case 'top-issues':
@@ -371,10 +392,18 @@ export default function DashboardPage() {
               <Clock className="h-4 w-4 text-blue-500" />
               <span>Prochaine maintenance</span>
             </div>
-            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <p className="font-medium text-sm">Mise à jour PostgreSQL</p>
-              <p className="text-xs text-muted-foreground">20 Jan 02:00 - 2h</p>
-            </div>
+            {nextMaintenance === undefined ? (
+              <p className="text-xs text-muted-foreground">Chargement…</p>
+            ) : nextMaintenance === null ? (
+              <p className="text-xs text-muted-foreground">Aucune maintenance planifiée</p>
+            ) : (
+              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <p className="font-medium text-sm">{nextMaintenance.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(nextMaintenance.scheduledStart)}
+                </p>
+              </div>
+            )}
           </div>
         )
       default:

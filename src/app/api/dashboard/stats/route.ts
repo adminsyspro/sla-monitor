@@ -61,6 +61,10 @@ export async function GET() {
     SELECT ROUND(AVG(response_time), 0) as avg FROM monitor_checks WHERE timestamp >= ? AND response_time IS NOT NULL
   `).get(since24h) as { avg: number | null };
 
+  // Error budget expressed in minutes for display
+  const errorBudgetTotalMinutes = Math.round(allowedDowntime * 10) / 10;
+  const errorBudgetUsedMinutes = Math.round(Math.min(actualDowntime, allowedDowntime) * 10) / 10;
+
   return NextResponse.json({
     totalMonitors,
     statusCounts,
@@ -68,6 +72,8 @@ export async function GET() {
     activeIncidents: activeIncidents.cnt,
     mttr,
     errorBudgetRemaining,
+    errorBudgetTotalMinutes,
+    errorBudgetUsedMinutes,
     checksPerMinute,
     avgResponseTime: avgRt.avg || 0,
   });
