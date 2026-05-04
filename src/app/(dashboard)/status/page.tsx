@@ -25,7 +25,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
-import { UptimeBar, generateDemoUptimeData } from '@/components/monitors/uptime-bar'
+import { UptimeBar } from '@/components/monitors/uptime-bar'
 import {
   Select,
   SelectContent,
@@ -136,7 +136,8 @@ export default function StatusPageAdmin() {
   const [previewLoading, setPreviewLoading] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  const uptimeData = useMemo(() => generateDemoUptimeData(90), [])
+  // No aggregated uptime feed yet — show empty bar (90 "unknown" cells) until a real /api/status-page/uptime endpoint exists.
+  const uptimeData = useMemo(() => [], [])
 
   // Fetch config on mount
   useEffect(() => {

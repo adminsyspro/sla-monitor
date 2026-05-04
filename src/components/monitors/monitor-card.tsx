@@ -3,10 +3,28 @@
 import { Activity, Clock, Zap } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { UptimeBar, generateDemoUptimeData } from './uptime-bar'
-import { cn, formatDuration } from '@/lib/utils'
+import { UptimeBar } from './uptime-bar'
+import { cn } from '@/lib/utils'
 import type { Monitor, MonitorStatus } from '@/types'
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
+
+interface UptimeDay {
+  date: string
+  status: MonitorStatus
+  uptime: number
+  responseTime?: number
+}
+
+interface UptimeApiResponse {
+  uptime: number
+  avgResponseTime: number
+  dailyData: Array<{
+    date: string
+    status: string
+    uptime: number
+    avgResponseTime: number
+  }>
+}
 
 interface MonitorCardProps {
   monitor: Monitor
@@ -49,20 +67,37 @@ function getStatusLabel(status: MonitorStatus): string {
 }
 
 export function MonitorCard({ monitor, onClick, compact = false }: MonitorCardProps) {
-  const uptimeData = useMemo(() => generateDemoUptimeData(90), [])
+  const [uptimeData, setUptimeData] = useState<UptimeDay[]>([])
+  const [avgUptime, setAvgUptime] = useState<number | null>(null)
+  const [avgResponseTime, setAvgResponseTime] = useState<number | null>(null)
 
-  // Calculate average uptime from demo data
-  const avgUptime = useMemo(() => {
-    const sum = uptimeData.reduce((acc, day) => acc + day.uptime, 0)
-    return sum / uptimeData.length
-  }, [uptimeData])
-
-  // Calculate average response time from demo data
-  const avgResponseTime = useMemo(() => {
-    const validDays = uptimeData.filter((d) => d.responseTime)
-    const sum = validDays.reduce((acc, day) => acc + (day.responseTime || 0), 0)
-    return Math.round(sum / validDays.length)
-  }, [uptimeData])
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/monitors/${monitor.id}/uptime?period=90d`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((body: UptimeApiResponse) => {
+        if (cancelled) return
+        setUptimeData(
+          body.dailyData.map((d) => ({
+            date: d.date,
+            status: d.status as MonitorStatus,
+            uptime: d.uptime,
+            responseTime: d.avgResponseTime || undefined,
+          }))
+        )
+        setAvgUptime(body.uptime)
+        setAvgResponseTime(body.avgResponseTime || 0)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setUptimeData([])
+        setAvgUptime(null)
+        setAvgResponseTime(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [monitor.id])
 
   if (compact) {
     return (
@@ -90,8 +125,12 @@ export function MonitorCard({ monitor, onClick, compact = false }: MonitorCardPr
           <span className="font-medium text-sm truncate">{monitor.name}</span>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs text-muted-foreground">{avgUptime.toFixed(2)}%</span>
-          <span className="text-xs font-mono">{avgResponseTime}ms</span>
+          <span className="text-xs text-muted-foreground">
+            {avgUptime !== null ? `${avgUptime.toFixed(2)}%` : '—'}
+          </span>
+          <span className="text-xs font-mono">
+            {avgResponseTime !== null && avgResponseTime > 0 ? `${avgResponseTime}ms` : '—'}
+          </span>
         </div>
       </div>
     )
@@ -136,7 +175,9 @@ export function MonitorCard({ monitor, onClick, compact = false }: MonitorCardPr
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">90 derniers jours</span>
-            <span className="font-medium">{avgUptime.toFixed(3)}% uptime</span>
+            <span className="font-medium">
+              {avgUptime !== null ? `${avgUptime.toFixed(3)}% uptime` : 'Aucune donnée'}
+            </span>
           </div>
           <UptimeBar data={uptimeData} />
         </div>
@@ -162,7 +203,9 @@ export function MonitorCard({ monitor, onClick, compact = false }: MonitorCardPr
               <Zap className="h-3.5 w-3.5" />
               <span className="text-xs">Réponse</span>
             </div>
-            <p className="text-sm font-medium">{avgResponseTime}ms</p>
+            <p className="text-sm font-medium">
+              {avgResponseTime !== null && avgResponseTime > 0 ? `${avgResponseTime}ms` : '—'}
+            </p>
           </div>
         </div>
       </CardContent>
