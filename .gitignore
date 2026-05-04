@@ -50,3 +50,12 @@ docs/superpowers/
 *.db
 *.db-journal
 data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+*.egg-info/
+.pytest_cache/
