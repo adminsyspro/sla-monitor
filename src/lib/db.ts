@@ -2,7 +2,6 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { seedDefaultAdmin } from '@/lib/auth/seed';
-import { seedDemoData } from '@/lib/seed-data';
 
 let db: Database.Database | null = null;
 
@@ -183,5 +182,4 @@ function initSchema(db: Database.Database) {
   }
 
   seedDefaultAdmin(db);
-  seedDemoData(db);
 }
