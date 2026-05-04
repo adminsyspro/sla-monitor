@@ -6,7 +6,7 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 const COOKIE_NAME = 'sla-session';
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/providers', '/api/status-page/public'];
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/providers', '/api/status-page/public', '/api/internal'];
 const ADMIN_PATHS = ['/users', '/api/users', '/api/settings'];
 
 export async function middleware(request: NextRequest) {
