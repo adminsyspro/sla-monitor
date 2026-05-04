@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Area,
   AreaChart,
@@ -24,30 +24,18 @@ interface ResponseTimeChartProps {
   className?: string
 }
 
-// Generate mock data
-function generateData(hours: number) {
-  const data = []
-  const now = new Date()
+interface Bucket {
+  ts: number
+  label: string
+  avg: number | null
+  p95: number | null
+  p99: number | null
+}
 
-  for (let i = hours; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * 60 * 60 * 1000)
-    const baseResponseTime = 120
-    const variation = Math.sin(i / 3) * 30 + Math.random() * 40
-    const spike = Math.random() > 0.95 ? Math.random() * 200 : 0
-
-    data.push({
-      time: time.toISOString(),
-      label:
-        hours <= 24
-          ? time.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-          : time.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
-      responseTime: Math.max(50, Math.round(baseResponseTime + variation + spike)),
-      p95: Math.max(80, Math.round(baseResponseTime + variation + spike + 50 + Math.random() * 30)),
-      p99: Math.max(100, Math.round(baseResponseTime + variation + spike + 100 + Math.random() * 50)),
-    })
-  }
-
-  return data
+interface ApiResponse {
+  period: string
+  buckets: Bucket[]
+  stats: { avg: number; min: number; max: number; p95: number; p99: number }
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -59,17 +47,17 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-primary" />
             <span className="text-muted-foreground">Moyen:</span>
-            <span className="font-medium">{payload[0]?.value}ms</span>
+            <span className="font-medium">{payload[0]?.value ?? '—'}ms</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-yellow-500" />
             <span className="text-muted-foreground">P95:</span>
-            <span className="font-medium">{payload[1]?.value}ms</span>
+            <span className="font-medium">{payload[1]?.value ?? '—'}ms</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-red-500" />
             <span className="text-muted-foreground">P99:</span>
-            <span className="font-medium">{payload[2]?.value}ms</span>
+            <span className="font-medium">{payload[2]?.value ?? '—'}ms</span>
           </div>
         </div>
       </div>
@@ -80,32 +68,31 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function ResponseTimeChart({ className }: ResponseTimeChartProps) {
   const [period, setPeriod] = useState('24h')
+  const [apiData, setApiData] = useState<ApiResponse | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const data = useMemo(() => {
-    switch (period) {
-      case '1h':
-        return generateData(1)
-      case '6h':
-        return generateData(6)
-      case '24h':
-        return generateData(24)
-      case '7d':
-        return generateData(168)
-      case '30d':
-        return generateData(720)
-      default:
-        return generateData(24)
-    }
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/dashboard/response-time?period=${period}`)
+      .then(r => r.ok ? r.json() : null)
+      .then((data: ApiResponse | null) => {
+        setApiData(data)
+      })
+      .catch(() => setApiData(null))
+      .finally(() => setLoading(false))
   }, [period])
 
-  // Calculate stats
-  const stats = useMemo(() => {
-    const responseTimes = data.map((d) => d.responseTime)
-    const avg = Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
-    const min = Math.min(...responseTimes)
-    const max = Math.max(...responseTimes)
-    return { avg, min, max }
-  }, [data])
+  // Map API buckets to chart data shape — null avgs become undefined so Recharts
+  // renders gaps instead of connecting the line through missing points.
+  const chartData = (apiData?.buckets ?? []).map(b => ({
+    label: b.label,
+    responseTime: b.avg ?? undefined,
+    p95: b.p95 ?? undefined,
+    p99: b.p99 ?? undefined,
+  }))
+
+  const hasData = chartData.some(d => d.responseTime !== undefined)
+  const stats = apiData?.stats ?? { avg: 0, min: 0, max: 0 }
 
   return (
     <Card className={cn('', className)}>
@@ -114,13 +101,13 @@ export function ResponseTimeChart({ className }: ResponseTimeChartProps) {
           <CardTitle className="text-base font-medium">Temps de réponse</CardTitle>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>
-              Moy: <span className="font-medium text-foreground">{stats.avg}ms</span>
+              Moy: <span className="font-medium text-foreground">{stats.avg ? `${stats.avg}ms` : '—'}</span>
             </span>
             <span>
-              Min: <span className="font-medium text-green-500">{stats.min}ms</span>
+              Min: <span className="font-medium text-green-500">{stats.min ? `${stats.min}ms` : '—'}</span>
             </span>
             <span>
-              Max: <span className="font-medium text-red-500">{stats.max}ms</span>
+              Max: <span className="font-medium text-red-500">{stats.max ? `${stats.max}ms` : '—'}</span>
             </span>
           </div>
         </div>
@@ -139,62 +126,75 @@ export function ResponseTimeChart({ className }: ResponseTimeChartProps) {
       </CardHeader>
       <CardContent className="pt-4">
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-              <defs>
-                <linearGradient id="responseTimeGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="p95Gradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(45, 93%, 47%)" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="hsl(45, 93%, 47%)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                className="text-muted-foreground"
-                interval="preserveStartEnd"
-              />
-              <YAxis
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                className="text-muted-foreground"
-                tickFormatter={(value) => `${value}ms`}
-                width={50}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="p99"
-                stroke="hsl(0, 84%, 60%)"
-                strokeWidth={1}
-                fill="transparent"
-                dot={false}
-              />
-              <Area
-                type="monotone"
-                dataKey="p95"
-                stroke="hsl(45, 93%, 47%)"
-                strokeWidth={1}
-                fill="url(#p95Gradient)"
-                dot={false}
-              />
-              <Area
-                type="monotone"
-                dataKey="responseTime"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                fill="url(#responseTimeGradient)"
-                dot={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              Chargement…
+            </div>
+          ) : !hasData ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-muted-foreground text-center">Aucune donnée pour la période</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="responseTimeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="p95Gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(45, 93%, 47%)" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="hsl(45, 93%, 47%)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  className="text-muted-foreground"
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  className="text-muted-foreground"
+                  tickFormatter={(value) => `${value}ms`}
+                  width={50}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="p99"
+                  stroke="hsl(0, 84%, 60%)"
+                  strokeWidth={1}
+                  fill="transparent"
+                  dot={false}
+                  connectNulls={false}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="p95"
+                  stroke="hsl(45, 93%, 47%)"
+                  strokeWidth={1}
+                  fill="url(#p95Gradient)"
+                  dot={false}
+                  connectNulls={false}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="responseTime"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fill="url(#responseTimeGradient)"
+                  dot={false}
+                  connectNulls={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
         <div className="flex items-center justify-center gap-6 mt-4 text-xs">
           <div className="flex items-center gap-2">

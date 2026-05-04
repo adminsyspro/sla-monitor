@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Bar,
   BarChart,
@@ -17,15 +17,14 @@ interface ServiceUptimeChartProps {
   className?: string
 }
 
-// Mock data - would come from props/API
-const serviceData = [
-  { name: 'API Production', uptime: 99.98, target: 99.9 },
-  { name: 'Site Web', uptime: 99.95, target: 99.9 },
-  { name: 'Base de données', uptime: 99.99, target: 99.95 },
-  { name: 'Service Paiement', uptime: 99.85, target: 99.9 },
-  { name: 'CDN', uptime: 99.97, target: 99.5 },
-  { name: 'Auth Service', uptime: 99.92, target: 99.9 },
-]
+interface ServiceEntry {
+  id: string
+  name: string
+  uptime: number
+  target: number
+  checks: number
+  failures: number
+}
 
 const getBarColor = (uptime: number, target: number) => {
   if (uptime >= target) return 'hsl(142, 76%, 36%)' // Green
@@ -76,12 +75,26 @@ const CustomTooltip = ({ active, payload }: any) => {
 }
 
 export function ServiceUptimeChart({ className }: ServiceUptimeChartProps) {
+  const [services, setServices] = useState<ServiceEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/dashboard/services-uptime?period=30d')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.services) setServices(data.services)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  // Sort by uptime descending for display (best at top)
   const sortedData = useMemo(
-    () => [...serviceData].sort((a, b) => b.uptime - a.uptime),
-    []
+    () => [...services].sort((a, b) => b.uptime - a.uptime),
+    [services]
   )
 
-  const conformCount = serviceData.filter((s) => s.uptime >= s.target).length
+  const conformCount = services.filter(s => s.uptime >= s.target).length
 
   return (
     <Card className={cn('', className)}>
@@ -90,58 +103,70 @@ export function ServiceUptimeChart({ className }: ServiceUptimeChartProps) {
           <CardTitle className="text-base font-medium">
             Disponibilité par service
           </CardTitle>
-          <div className="text-sm">
-            <span className="text-muted-foreground">Conformes: </span>
-            <span
-              className={cn(
-                'font-medium',
-                conformCount === serviceData.length
-                  ? 'text-green-500'
-                  : 'text-yellow-500'
-              )}
-            >
-              {conformCount}/{serviceData.length}
-            </span>
-          </div>
+          {!loading && services.length > 0 && (
+            <div className="text-sm">
+              <span className="text-muted-foreground">Conformes: </span>
+              <span
+                className={cn(
+                  'font-medium',
+                  conformCount === services.length
+                    ? 'text-green-500'
+                    : 'text-yellow-500'
+                )}
+              >
+                {conformCount}/{services.length}
+              </span>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="pt-4">
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={sortedData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-            >
-              <XAxis
-                type="number"
-                domain={[99, 100]}
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `${value}%`}
-                className="text-muted-foreground"
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                className="text-muted-foreground"
-                width={110}
-              />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
-              <Bar dataKey="uptime" radius={[0, 4, 4, 0]} maxBarSize={24}>
-                {sortedData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={getBarColor(entry.uptime, entry.target)}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              Chargement…
+            </div>
+          ) : services.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-muted-foreground text-center">Aucun service</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={sortedData}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+              >
+                <XAxis
+                  type="number"
+                  domain={[99, 100]}
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${value}%`}
+                  className="text-muted-foreground"
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  className="text-muted-foreground"
+                  width={110}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
+                <Bar dataKey="uptime" radius={[0, 4, 4, 0]} maxBarSize={24}>
+                  {sortedData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={getBarColor(entry.uptime, entry.target)}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </CardContent>
     </Card>

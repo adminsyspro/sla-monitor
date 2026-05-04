@@ -1,6 +1,7 @@
 'use client'
 
-import { AlertTriangle, ArrowRight, TrendingDown, Zap } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { AlertTriangle, ArrowRight, Zap } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,59 +11,44 @@ interface ServiceIssue {
   id: string
   name: string
   uptime: number
-  responseTime: number
+  avgResponseTime: number
+  // trend is not yet computed month-over-month; set to 'stable' for all entries
   trend: 'up' | 'down' | 'stable'
-  issues: string[]
+  lastErrors: string[]
+  failuresCount: number
 }
-
-const worstServices: ServiceIssue[] = [
-  {
-    id: '1',
-    name: 'Service de paiement',
-    uptime: 99.85,
-    responseTime: 342,
-    trend: 'down',
-    issues: ['Latence élevée', 'Timeouts intermittents'],
-  },
-  {
-    id: '2',
-    name: 'API Recherche',
-    uptime: 99.91,
-    responseTime: 287,
-    trend: 'down',
-    issues: ['Charge CPU élevée'],
-  },
-  {
-    id: '3',
-    name: 'Service Email',
-    uptime: 99.88,
-    responseTime: 198,
-    trend: 'stable',
-    issues: ['Queue de messages saturée'],
-  },
-  {
-    id: '4',
-    name: 'Auth Service',
-    uptime: 99.92,
-    responseTime: 156,
-    trend: 'up',
-    issues: ['Pic de connexions'],
-  },
-  {
-    id: '5',
-    name: 'CDN Europe',
-    uptime: 99.89,
-    responseTime: 89,
-    trend: 'stable',
-    issues: ['Cache miss rate élevé'],
-  },
-]
 
 interface TopIssuesCardProps {
   className?: string
 }
 
 export function TopIssuesCard({ className }: TopIssuesCardProps) {
+  const [issues, setIssues] = useState<ServiceIssue[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/dashboard/top-issues?limit=5')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.issues) {
+          // Map API response to component shape.
+          // trend is not yet computed month-over-month; default to 'stable'.
+          const mapped: ServiceIssue[] = data.issues.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            uptime: item.uptime,
+            avgResponseTime: item.avgResponseTime,
+            trend: 'stable' as const,
+            lastErrors: item.lastErrors ?? [],
+            failuresCount: item.failuresCount,
+          }))
+          setIssues(mapped)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <Card className={cn('', className)}>
       <CardHeader className="pb-2">
@@ -78,105 +64,142 @@ export function TopIssuesCard({ className }: TopIssuesCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {worstServices.map((service, index) => (
-            <div
-              key={service.id}
-              className={cn(
-                'flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-muted/50',
-                index === 0 && 'bg-red-500/5 border border-red-500/20'
-              )}
-            >
-              {/* Rank */}
+        {loading ? (
+          <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">
+            Chargement…
+          </div>
+        ) : issues.length === 0 ? (
+          <div className="flex items-center justify-center h-24">
+            <p className="text-muted-foreground text-center">Aucun service à surveiller</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {issues.map((service, index) => (
               <div
+                key={service.id}
                 className={cn(
-                  'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
-                  index === 0
-                    ? 'bg-red-500 text-white'
-                    : index < 3
-                    ? 'bg-yellow-500 text-white'
-                    : 'bg-muted text-muted-foreground'
+                  'flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-muted/50',
+                  index === 0 && 'bg-red-500/5 border border-red-500/20'
                 )}
               >
-                {index + 1}
-              </div>
-
-              {/* Service Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium truncate">{service.name}</span>
-                  {service.trend === 'down' && (
-                    <TrendingDown className="h-3 w-3 text-red-500" />
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  {service.issues.slice(0, 2).map((issue, i) => (
-                    <Badge
-                      key={i}
-                      variant="secondary"
-                      className="text-[10px] px-1.5 py-0"
-                    >
-                      {issue}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {/* Metrics */}
-              <div className="text-right space-y-1">
+                {/* Rank */}
                 <div
                   className={cn(
-                    'text-sm font-medium',
-                    service.uptime < 99.9 ? 'text-red-500' : 'text-yellow-500'
+                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
+                    index === 0
+                      ? 'bg-red-500 text-white'
+                      : index < 3
+                      ? 'bg-yellow-500 text-white'
+                      : 'bg-muted text-muted-foreground'
                   )}
                 >
-                  {service.uptime.toFixed(2)}%
+                  {index + 1}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Zap className="h-3 w-3" />
-                  {service.responseTime}ms
+
+                {/* Service Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium truncate">{service.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {service.lastErrors.slice(0, 2).map((err, i) => (
+                      <Badge
+                        key={i}
+                        variant="secondary"
+                        className="text-[10px] px-1.5 py-0"
+                      >
+                        {err}
+                      </Badge>
+                    ))}
+                    {service.lastErrors.length === 0 && service.failuresCount > 0 && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        {service.failuresCount} échec{service.failuresCount > 1 ? 's' : ''}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Metrics */}
+                <div className="text-right space-y-1">
+                  <div
+                    className={cn(
+                      'text-sm font-medium',
+                      service.uptime < 99.9 ? 'text-red-500' : 'text-yellow-500'
+                    )}
+                  >
+                    {service.uptime.toFixed(2)}%
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Zap className="h-3 w-3" />
+                    {service.avgResponseTime ? `${service.avgResponseTime}ms` : '—'}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
 }
 
-// Compact version for sidebar
+// Compact version for sidebar — also fetches real data
 export function TopIssuesCompact({ className }: { className?: string }) {
+  const [issues, setIssues] = useState<ServiceIssue[]>([])
+
+  useEffect(() => {
+    fetch('/api/dashboard/top-issues?limit=3')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.issues) {
+          setIssues(data.issues.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            uptime: item.uptime,
+            avgResponseTime: item.avgResponseTime,
+            trend: 'stable' as const,
+            lastErrors: item.lastErrors ?? [],
+            failuresCount: item.failuresCount,
+          })))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <Card className={cn('', className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">Top 3 à surveiller</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {worstServices.slice(0, 3).map((service, index) => (
-          <div
-            key={service.id}
-            className="flex items-center justify-between text-sm"
-          >
-            <div className="flex items-center gap-2">
-              <div
-                className={cn(
-                  'h-2 w-2 rounded-full',
-                  index === 0 ? 'bg-red-500' : 'bg-yellow-500'
-                )}
-              />
-              <span className="truncate max-w-[120px]">{service.name}</span>
-            </div>
-            <span
-              className={cn(
-                'font-medium',
-                service.uptime < 99.9 ? 'text-red-500' : 'text-yellow-500'
-              )}
+        {issues.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Aucune donnée</p>
+        ) : (
+          issues.slice(0, 3).map((service, index) => (
+            <div
+              key={service.id}
+              className="flex items-center justify-between text-sm"
             >
-              {service.uptime.toFixed(2)}%
-            </span>
-          </div>
-        ))}
+              <div className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    index === 0 ? 'bg-red-500' : 'bg-yellow-500'
+                  )}
+                />
+                <span className="truncate max-w-[120px]">{service.name}</span>
+              </div>
+              <span
+                className={cn(
+                  'font-medium',
+                  service.uptime < 99.9 ? 'text-red-500' : 'text-yellow-500'
+                )}
+              >
+                {service.uptime.toFixed(2)}%
+              </span>
+            </div>
+          ))
+        )}
       </CardContent>
     </Card>
   )
