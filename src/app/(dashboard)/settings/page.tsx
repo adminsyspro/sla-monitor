@@ -32,6 +32,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/stores/app-store'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 export default function SettingsPage() {
   const { theme, setTheme } = useAppStore()
@@ -40,11 +55,19 @@ export default function SettingsPage() {
   const isAdmin = user?.role === 'Administrator'
 
   // General settings state
-  const [generalSettings, setGeneralSettings] = useState({
+  const [generalSettings, setGeneralSettings] = useState<{
+    siteName: string
+    contactEmail: string
+    timezone: string
+    retentionDays: number | null
+  }>({
     siteName: '',
     contactEmail: '',
     timezone: '',
+    retentionDays: 90,
   })
+  const [loadedRetentionDays, setLoadedRetentionDays] = useState<number | null>(90)
+  const [pendingRetention, setPendingRetention] = useState<number | null | undefined>(undefined)
   const [generalMsg, setGeneralMsg] = useState('')
   const [generalError, setGeneralError] = useState('')
 
@@ -66,23 +89,46 @@ export default function SettingsPage() {
     if (activeTab === 'general') {
       fetch('/api/settings/general')
         .then((r) => r.json())
-        .then((data) => setGeneralSettings(data))
+        .then((data) => {
+          setGeneralSettings({
+            siteName: data.siteName ?? '',
+            contactEmail: data.contactEmail ?? '',
+            timezone: data.timezone ?? '',
+            retentionDays: data.retentionDays ?? 90,
+          })
+          setLoadedRetentionDays(data.retentionDays ?? 90)
+        })
         .catch(() => {})
     }
   }, [activeTab])
 
+  const isShrink = (next: number | null, prev: number | null): boolean => {
+    if (next === null) return false
+    if (prev === null) return true
+    return next < prev
+  }
+
   const saveGeneral = async () => {
     setGeneralMsg('')
     setGeneralError('')
+    if (isShrink(generalSettings.retentionDays, loadedRetentionDays)) {
+      setPendingRetention(generalSettings.retentionDays)
+      return
+    }
+    await persistGeneral()
+  }
+
+  const persistGeneral = async () => {
     const res = await fetch('/api/settings/general', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(generalSettings),
     })
     if (res.ok) {
-      setGeneralMsg('General settings saved')
+      setGeneralMsg('Settings saved.')
+      setLoadedRetentionDays(generalSettings.retentionDays)
     } else {
-      setGeneralError('Error while saving')
+      setGeneralError('Failed to save settings.')
     }
   }
 
@@ -199,6 +245,46 @@ export default function SettingsPage() {
                     <Save className="mr-2 h-4 w-4" />
                     Save
                   </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'general' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Server className="h-5 w-5" />
+                    Data retention
+                  </CardTitle>
+                  <CardDescription>
+                    Health check history older than this is permanently deleted. Affects only the
+                    monitor_checks table; incidents and maintenance windows are kept indefinitely.
+                    Cleanup runs hourly.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2 max-w-xs">
+                    <Label htmlFor="retention-days">Retention</Label>
+                    <Select
+                      value={generalSettings.retentionDays === null ? 'unlimited' : String(generalSettings.retentionDays)}
+                      onValueChange={(v) => {
+                        const next = v === 'unlimited' ? null : parseInt(v, 10)
+                        setGeneralSettings((s) => ({ ...s, retentionDays: next }))
+                      }}
+                      disabled={!isAdmin}
+                    >
+                      <SelectTrigger id="retention-days">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30">30 days</SelectItem>
+                        <SelectItem value="90">90 days</SelectItem>
+                        <SelectItem value="180">180 days</SelectItem>
+                        <SelectItem value="365">1 year</SelectItem>
+                        <SelectItem value="unlimited">Unlimited</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -472,6 +558,33 @@ export default function SettingsPage() {
           </div>
         </div>
       </main>
+
+      <Dialog open={pendingRetention !== undefined} onOpenChange={(o) => !o && setPendingRetention(undefined)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reduce retention window?</DialogTitle>
+            <DialogDescription>
+              {loadedRetentionDays === null
+                ? 'Switching from unlimited retention to a fixed window will permanently delete older health check history at the next cleanup run.'
+                : `This will permanently delete approximately ${Math.max(
+                    0,
+                    (loadedRetentionDays ?? 0) - (pendingRetention ?? 0)
+                  )} days of health check history at the next cleanup run.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingRetention(undefined)}>Cancel</Button>
+            <Button
+              onClick={async () => {
+                setPendingRetention(undefined)
+                await persistGeneral()
+              }}
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
