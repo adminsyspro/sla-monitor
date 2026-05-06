@@ -99,3 +99,38 @@ async def test_post_check_201_returns_false(client):
     async with client:
         gone = await client.post_check(CheckResult(monitor_id="m1", timestamp=1, status="operational"))
     assert gone is False
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_post_cleanup_returns_response(client):
+    respx.post("http://next.test/api/internal/cleanup").mock(
+        return_value=httpx.Response(200, json={"deleted": 42, "retention_days": 30})
+    )
+    async with client:
+        result = await client.post_cleanup()
+    assert result == {"deleted": 42, "retention_days": 30}
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_post_cleanup_returns_skipped_for_unlimited(client):
+    respx.post("http://next.test/api/internal/cleanup").mock(
+        return_value=httpx.Response(200, json={
+            "deleted": 0, "retention_days": None, "skipped": "unlimited"
+        })
+    )
+    async with client:
+        result = await client.post_cleanup()
+    assert result["skipped"] == "unlimited"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_post_cleanup_sends_bearer(client):
+    route = respx.post("http://next.test/api/internal/cleanup").mock(
+        return_value=httpx.Response(200, json={"deleted": 0, "retention_days": 30})
+    )
+    async with client:
+        await client.post_cleanup()
+    assert route.calls.last.request.headers["authorization"] == "Bearer abc"

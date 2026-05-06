@@ -45,3 +45,11 @@ class NextApiClient:
             return True
         resp.raise_for_status()
         return False
+
+    async def post_cleanup(self) -> dict:
+        """Trigger one cleanup tick on Next. Returns the parsed JSON response.
+        Raises httpx.HTTPStatusError on non-2xx."""
+        assert self._client is not None, "Use as async context manager"
+        resp = await self._client.post("/api/internal/cleanup")
+        resp.raise_for_status()
+        return resp.json()
