@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ALL_WINDOWS, parseWindow, isWindowAvailable } from '@/lib/window';
+import { ALL_WINDOWS, parseWindow, isWindowAvailable, windowToDays } from '@/lib/window';
 
 describe('window util', () => {
   it('parses known presets', () => {
@@ -18,6 +18,14 @@ describe('window util', () => {
 
   it('lists all five presets in order', () => {
     expect(ALL_WINDOWS).toEqual(['24h', '7d', '30d', '90d', '1y']);
+  });
+
+  it('windowToDays returns the day count for each preset', () => {
+    expect(windowToDays('24h')).toBe(1);
+    expect(windowToDays('7d')).toBe(7);
+    expect(windowToDays('30d')).toBe(30);
+    expect(windowToDays('90d')).toBe(90);
+    expect(windowToDays('1y')).toBe(365);
   });
 
   describe('isWindowAvailable', () => {

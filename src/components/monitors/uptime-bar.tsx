@@ -20,6 +20,7 @@ interface UptimeDay {
 interface UptimeBarProps {
   data: UptimeDay[]
   className?: string
+  days?: number
 }
 
 function getStatusColor(status: MonitorStatus): string {
@@ -56,13 +57,13 @@ function getStatusLabel(status: MonitorStatus): string {
   }
 }
 
-export function UptimeBar({ data, className }: UptimeBarProps) {
-  // Ensure we have 90 days of data
+export function UptimeBar({ data, className, days = 90 }: UptimeBarProps) {
+  // Ensure we have `days` days of data
   const normalizedData = useMemo(() => {
     const result: UptimeDay[] = []
     const today = new Date()
 
-    for (let i = 89; i >= 0; i--) {
+    for (let i = days - 1; i >= 0; i--) {
       const date = new Date(today)
       date.setDate(date.getDate() - i)
       const dateStr = date.toISOString().split('T')[0]
@@ -78,7 +79,7 @@ export function UptimeBar({ data, className }: UptimeBarProps) {
     }
 
     return result
-  }, [data])
+  }, [data, days])
 
   return (
     <TooltipProvider delayDuration={0}>

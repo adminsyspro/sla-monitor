@@ -22,3 +22,7 @@ export function isWindowAvailable(w: WindowPreset, retentionDays: number | null)
   if (retentionDays === null) return true;
   return WINDOW_DAYS[w] <= retentionDays;
 }
+
+export function windowToDays(w: WindowPreset): number {
+  return WINDOW_DAYS[w];
+}

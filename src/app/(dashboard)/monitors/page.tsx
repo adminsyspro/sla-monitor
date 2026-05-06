@@ -39,7 +39,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ALL_WINDOWS, parseWindow, isWindowAvailable, type WindowPreset } from '@/lib/window'
+import { ALL_WINDOWS, parseWindow, isWindowAvailable, windowToDays, type WindowPreset } from '@/lib/window'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { DateRangePicker } from '@/components/ui/date-picker'
@@ -565,6 +565,7 @@ export default function MonitorsPage() {
                 <MonitorCard
                   key={monitor.id}
                   monitor={monitor}
+                  window={currentWindow}
                   onClick={() => handleMonitorClick(monitor)}
                 />
               ))}
@@ -733,7 +734,7 @@ export default function MonitorsPage() {
                       <h4 className="font-medium">Uptime History</h4>
                       <span className="text-sm text-muted-foreground">Last {currentWindow}</span>
                     </div>
-                    <UptimeBar data={uptimeData} />
+                    <UptimeBar data={uptimeData} days={windowToDays(currentWindow)} />
                   </div>
 
                   {/* Configuration */}

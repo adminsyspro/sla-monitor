@@ -7,6 +7,7 @@ import { UptimeBar } from './uptime-bar'
 import { cn } from '@/lib/utils'
 import type { Monitor, MonitorStatus } from '@/types'
 import { useEffect, useState } from 'react'
+import { type WindowPreset, windowToDays } from '@/lib/window'
 
 interface UptimeDay {
   date: string
@@ -28,6 +29,7 @@ interface UptimeApiResponse {
 
 interface MonitorCardProps {
   monitor: Monitor
+  window: WindowPreset
   onClick?: () => void
   compact?: boolean
 }
@@ -66,14 +68,14 @@ function getStatusLabel(status: MonitorStatus): string {
   }
 }
 
-export function MonitorCard({ monitor, onClick, compact = false }: MonitorCardProps) {
+export function MonitorCard({ monitor, window, onClick, compact = false }: MonitorCardProps) {
   const [uptimeData, setUptimeData] = useState<UptimeDay[]>([])
   const [avgUptime, setAvgUptime] = useState<number | null>(null)
   const [avgResponseTime, setAvgResponseTime] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    fetch(`/api/monitors/${monitor.id}/uptime?period=90d`)
+    fetch(`/api/monitors/${monitor.id}/uptime?period=${window}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((body: UptimeApiResponse) => {
         if (cancelled) return
@@ -97,7 +99,7 @@ export function MonitorCard({ monitor, onClick, compact = false }: MonitorCardPr
     return () => {
       cancelled = true
     }
-  }, [monitor.id])
+  }, [monitor.id, window])
 
   if (compact) {
     return (
@@ -174,12 +176,12 @@ export function MonitorCard({ monitor, onClick, compact = false }: MonitorCardPr
         {/* Uptime Bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Last 90 days</span>
+            <span className="text-muted-foreground">Last {window}</span>
             <span className="font-medium">
               {avgUptime !== null ? `${avgUptime.toFixed(3)}% uptime` : 'No data'}
             </span>
           </div>
-          <UptimeBar data={uptimeData} />
+          <UptimeBar data={uptimeData} days={windowToDays(window)} />
         </div>
 
         {/* Stats */}
