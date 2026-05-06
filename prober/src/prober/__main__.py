@@ -7,6 +7,7 @@ from prober.config import Settings
 from prober.client import NextApiClient
 from prober.reporter import Reporter
 from prober.scheduler import Scheduler
+from prober.cleanup import CleanupLoop
 from prober.health import run_health_server
 
 
@@ -44,14 +45,15 @@ async def main() -> int:
             poll_interval=settings.poll_interval_seconds,
             max_concurrent=settings.max_concurrent_checks,
         )
+        cleanup = CleanupLoop(client=client, interval=settings.cleanup_interval_seconds)
         health_runner = await run_health_server(lambda: scheduler.last_poll_at)
 
         loop = asyncio.get_event_loop()
         for sig in (signal.SIGTERM, signal.SIGINT):
-            loop.add_signal_handler(sig, scheduler.stop)
+            loop.add_signal_handler(sig, lambda: (scheduler.stop(), cleanup.stop()))
 
         try:
-            await scheduler.run()
+            await asyncio.gather(scheduler.run(), cleanup.run())
         finally:
             await health_runner.cleanup()
     log.info("prober.exit")
