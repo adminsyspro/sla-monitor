@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const body = await request.json();
-  if (!body.name) return NextResponse.json({ error: 'Nom requis' }, { status: 400 });
+  if (!body.name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
 
   const db = getDb();
   const id = crypto.randomUUID();

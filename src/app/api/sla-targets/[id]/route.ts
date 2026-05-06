@@ -23,7 +23,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   const db = getDb();
   const row = db.prepare('SELECT * FROM sla_targets WHERE id = ?').get(id) as SlaRow | undefined;
-  if (!row) return NextResponse.json({ error: 'Objectif SLA non trouvé' }, { status: 404 });
+  if (!row) return NextResponse.json({ error: 'SLA target not found' }, { status: 404 });
   return NextResponse.json(toResponse(row));
 }
 
@@ -36,7 +36,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
 
   const existing = db.prepare('SELECT id FROM sla_targets WHERE id = ?').get(id);
-  if (!existing) return NextResponse.json({ error: 'Objectif SLA non trouvé' }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: 'SLA target not found' }, { status: 404 });
 
   const fields: string[] = [];
   const values: unknown[] = [];

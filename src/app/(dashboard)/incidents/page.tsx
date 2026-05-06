@@ -84,16 +84,16 @@ function getStatusIcon(status: IncidentStatus) {
 function getStatusLabel(status: IncidentStatus): string {
   switch (status) {
     case 'investigating': return 'Investigation'
-    case 'identified': return 'Identifié'
-    case 'monitoring': return 'Surveillance'
-    case 'resolved': return 'Résolu'
+    case 'identified': return 'Identified'
+    case 'monitoring': return 'Monitoring'
+    case 'resolved': return 'Resolved'
   }
 }
 
 function getSeverityConfig(severity: IncidentSeverity) {
   switch (severity) {
     case 'critical':
-      return { label: 'Critique', color: 'bg-red-500', variant: 'destructive' as const }
+      return { label: 'Critical', color: 'bg-red-500', variant: 'destructive' as const }
     case 'major':
       return { label: 'Majeur', color: 'bg-orange-500', variant: 'default' as const }
     case 'minor':
@@ -278,7 +278,7 @@ export default function IncidentsPage() {
 
   // Export functions
   const exportToCSV = () => {
-    const headers = ['ID', 'Titre', 'Sévérité', 'Statut', 'Début', 'Fin', 'Durée', 'Services affectés', 'Cause racine']
+    const headers = ['ID', 'Title', 'Severity', 'Status', 'Start', 'End', 'Duration', 'Affected services', 'Root cause']
     const rows = filteredIncidents.map((inc) => [
       inc.id,
       inc.title,
@@ -301,7 +301,7 @@ export default function IncidentsPage() {
 
   const exportToPDF = () => {
     // In real implementation, would use a library like jsPDF or call backend
-    alert('Export PDF : Cette fonctionnalité nécessite une intégration backend pour générer le PDF.')
+    alert('PDF export requires a backend integration to generate the PDF.')
   }
 
   return (
@@ -327,7 +327,7 @@ export default function IncidentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Actifs</p>
+                  <p className="text-sm text-muted-foreground">Active</p>
                   <p className="text-2xl font-bold">{stats.active}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-yellow-500/10">
@@ -340,7 +340,7 @@ export default function IncidentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Critiques</p>
+                  <p className="text-sm text-muted-foreground">Critical</p>
                   <p className="text-2xl font-bold text-red-500">{stats.critical}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-red-500/10">
@@ -353,7 +353,7 @@ export default function IncidentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Résolus</p>
+                  <p className="text-sm text-muted-foreground">Resolved</p>
                   <p className="text-2xl font-bold text-green-500">{stats.resolved}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-green-500/10">
@@ -383,7 +383,7 @@ export default function IncidentsPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Rechercher un incident..."
+                placeholder="Search incidents..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-64 pl-9"
@@ -391,11 +391,11 @@ export default function IncidentsPage() {
             </div>
             <Select value={severityFilter} onValueChange={(v) => setSeverityFilter(v as any)}>
               <SelectTrigger className="w-36">
-                <SelectValue placeholder="Sévérité" />
+                <SelectValue placeholder="Severity" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes</SelectItem>
-                <SelectItem value="critical">Critique</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
                 <SelectItem value="major">Majeur</SelectItem>
                 <SelectItem value="minor">Mineur</SelectItem>
               </SelectContent>
@@ -405,22 +405,22 @@ export default function IncidentsPage() {
           <div className="flex items-center gap-2">
             <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
               <TabsList>
-                <TabsTrigger value="all">Tous</TabsTrigger>
+                <TabsTrigger value="all">All</TabsTrigger>
                 <TabsTrigger value="investigating" className="gap-1">
                   <Clock className="h-3 w-3" />
                   Investigation
                 </TabsTrigger>
                 <TabsTrigger value="identified" className="gap-1">
                   <AlertTriangle className="h-3 w-3" />
-                  Identifié
+                  Identified
                 </TabsTrigger>
                 <TabsTrigger value="monitoring" className="gap-1">
                   <Eye className="h-3 w-3" />
-                  Surveillance
+                  Monitoring
                 </TabsTrigger>
                 <TabsTrigger value="resolved" className="gap-1">
                   <CheckCircle2 className="h-3 w-3" />
-                  Résolu
+                  Resolved
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -453,14 +453,14 @@ export default function IncidentsPage() {
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Déclarer un incident
+                  Report an incident
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Déclarer un nouvel incident</DialogTitle>
+                  <DialogTitle>Report a new incident</DialogTitle>
                   <DialogDescription>
-                    Créez un incident manuel pour informer les équipes et les utilisateurs.
+                    Create a manual incident to inform teams and users.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -468,13 +468,13 @@ export default function IncidentsPage() {
                     <Label htmlFor="title">Titre de l'incident</Label>
                     <Input
                       id="title"
-                      placeholder="Ex: Latence élevée sur l'API de paiement"
+                      placeholder="Example: High latency on the payment API"
                       value={newIncident.title}
                       onChange={(e) => setNewIncident({ ...newIncident, title: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Sévérité</Label>
+                    <Label>Severity</Label>
                     <Select
                       value={newIncident.severity}
                       onValueChange={(v) => setNewIncident({ ...newIncident, severity: v as IncidentSeverity })}
@@ -486,7 +486,7 @@ export default function IncidentsPage() {
                         <SelectItem value="minor">
                           <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                            Mineur - Impact limité
+                            Minor - Limited impact
                           </div>
                         </SelectItem>
                         <SelectItem value="major">
@@ -498,20 +498,20 @@ export default function IncidentsPage() {
                         <SelectItem value="critical">
                           <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-red-500" />
-                            Critique - Service indisponible
+                            Critical - Service unavailable
                           </div>
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Services affectés</Label>
+                    <Label>Affected services</Label>
                     <Select
                       value={newIncident.affectedMonitors[0] || ''}
                       onValueChange={(v) => setNewIncident({ ...newIncident, affectedMonitors: [v] })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un service" />
+                        <SelectValue placeholder="Select a service" />
                       </SelectTrigger>
                       <SelectContent>
                         {monitors.map((monitor) => (
@@ -526,7 +526,7 @@ export default function IncidentsPage() {
                     <Label htmlFor="message">Message initial</Label>
                     <Textarea
                       id="message"
-                      placeholder="Décrivez le problème observé..."
+                      placeholder="Describe the observed issue..."
                       value={newIncident.message}
                       onChange={(e) => setNewIncident({ ...newIncident, message: e.target.value })}
                       rows={3}
@@ -535,10 +535,10 @@ export default function IncidentsPage() {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Annuler
+                    Cancel
                   </Button>
                   <Button onClick={handleCreateIncident} disabled={!newIncident.title.trim()}>
-                    Créer l'incident
+                    Create incident
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -551,7 +551,7 @@ export default function IncidentsPage() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Clock className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="mt-4 text-sm text-muted-foreground">Chargement des incidents...</p>
+              <p className="mt-4 text-sm text-muted-foreground">Loading incidents...</p>
             </div>
           ) : filteredIncidents.length > 0 ? (
             filteredIncidents.map((incident) => {
@@ -586,7 +586,7 @@ export default function IncidentsPage() {
                               <Badge variant={severityConfig.variant}>{severityConfig.label}</Badge>
                               <Badge variant="outline">{getStatusLabel(incident.status)}</Badge>
                               {incident.createdBy === 'system' && (
-                                <Badge variant="secondary" className="text-xs">Auto-détecté</Badge>
+                                <Badge variant="secondary" className="text-xs">Auto-detected</Badge>
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground mt-1">
@@ -603,11 +603,11 @@ export default function IncidentsPage() {
                           </div>
                           <div className="flex items-center gap-1">
                             <Timer className="h-4 w-4" />
-                            Durée: {duration}
+                            Duration: {duration}
                           </div>
                           <div className="flex items-center gap-1">
                             <MessageSquare className="h-4 w-4" />
-                            {incident.updates.length} mise{incident.updates.length > 1 ? 's' : ''} à jour
+                            {incident.updates.length} update{incident.updates.length > 1 ? 's' : ''}
                           </div>
                         </div>
 
@@ -636,7 +636,7 @@ export default function IncidentsPage() {
                             }}
                           >
                             <Edit className="h-4 w-4 mr-1" />
-                            Mettre à jour
+                            Update
                           </Button>
                         )}
                         <DropdownMenu>
@@ -651,7 +651,7 @@ export default function IncidentsPage() {
                               setIsDetailSheetOpen(true)
                             }}>
                               <Eye className="h-4 w-4 mr-2" />
-                              Voir les détails
+                              View details
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <ArrowUpRight className="h-4 w-4 mr-2" />
@@ -660,7 +660,7 @@ export default function IncidentsPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteIncident(incident.id)}>
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Supprimer
+                              Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -675,11 +675,11 @@ export default function IncidentsPage() {
               <div className="rounded-full bg-green-500/10 p-4">
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold">Aucun incident</h3>
+              <h3 className="mt-4 text-lg font-semibold">No incidents</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 {search || statusFilter !== 'all' || severityFilter !== 'all'
-                  ? 'Aucun incident ne correspond à vos critères'
-                  : 'Tous les systèmes fonctionnent normalement'}
+                  ? 'No incidents match your criteria'
+                  : 'All systems are operating normally'}
               </p>
             </div>
           )}
@@ -689,14 +689,14 @@ export default function IncidentsPage() {
         <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Mettre à jour l'incident</DialogTitle>
+              <DialogTitle>Update incident</DialogTitle>
               <DialogDescription>
                 {selectedIncident?.title}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label>Nouveau statut</Label>
+                <Label>New status</Label>
                 <Select value={updateStatus} onValueChange={(v) => setUpdateStatus(v as IncidentStatus)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -711,29 +711,29 @@ export default function IncidentsPage() {
                     <SelectItem value="identified">
                       <div className="flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4 text-orange-500" />
-                        Identifié
+                        Identified
                       </div>
                     </SelectItem>
                     <SelectItem value="monitoring">
                       <div className="flex items-center gap-2">
                         <Eye className="h-4 w-4 text-yellow-500" />
-                        Surveillance
+                        Monitoring
                       </div>
                     </SelectItem>
                     <SelectItem value="resolved">
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        Résolu
+                        Resolved
                       </div>
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="update-message">Message de mise à jour</Label>
+                <Label htmlFor="update-message">Update message</Label>
                 <Textarea
                   id="update-message"
-                  placeholder="Décrivez l'avancement de la résolution..."
+                  placeholder="Describe resolution progress..."
                   value={updateMessage}
                   onChange={(e) => setUpdateMessage(e.target.value)}
                   rows={4}
@@ -742,11 +742,11 @@ export default function IncidentsPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
-                Annuler
+                Cancel
               </Button>
               <Button onClick={handleAddUpdate} disabled={!updateMessage.trim()}>
                 <Send className="h-4 w-4 mr-2" />
-                Publier la mise à jour
+                Publish update
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -775,25 +775,25 @@ export default function IncidentsPage() {
                     </Badge>
                     <Badge variant="outline">{getStatusLabel(selectedIncident.status)}</Badge>
                     {selectedIncident.createdBy === 'system' && (
-                      <Badge variant="secondary">Auto-détecté</Badge>
+                      <Badge variant="secondary">Auto-detected</Badge>
                     )}
                   </div>
 
                   {/* Quick Stats */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="rounded-lg border p-3">
-                      <p className="text-sm text-muted-foreground">Début</p>
+                      <p className="text-sm text-muted-foreground">Start</p>
                       <p className="font-medium">{formatDate(selectedIncident.startedAt)}</p>
                     </div>
                     <div className="rounded-lg border p-3">
-                      <p className="text-sm text-muted-foreground">Durée</p>
+                      <p className="text-sm text-muted-foreground">Duration</p>
                       <p className="font-medium">
                         {calculateDuration(selectedIncident.startedAt, selectedIncident.resolvedAt)}
                       </p>
                     </div>
                     {selectedIncident.resolvedAt && (
                       <div className="rounded-lg border p-3 col-span-2">
-                        <p className="text-sm text-muted-foreground">Résolu le</p>
+                        <p className="text-sm text-muted-foreground">Resolved on</p>
                         <p className="font-medium">{formatDate(selectedIncident.resolvedAt)}</p>
                       </div>
                     )}
@@ -801,14 +801,14 @@ export default function IncidentsPage() {
 
                   {/* Affected Services */}
                   <div className="space-y-2">
-                    <h4 className="font-medium">Services affectés</h4>
+                    <h4 className="font-medium">Affected Services</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedIncident.affectedMonitors.length > 0 ? (
                         selectedIncident.affectedMonitors.map((id) => (
                           <Badge key={id} variant="secondary">{getMonitorName(id)}</Badge>
                         ))
                       ) : (
-                        <span className="text-sm text-muted-foreground">Aucun service spécifié</span>
+                        <span className="text-sm text-muted-foreground">No service specified</span>
                       )}
                     </div>
                   </div>
@@ -838,7 +838,7 @@ export default function IncidentsPage() {
                   {/* Timeline */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Historique des mises à jour</h4>
+                      <h4 className="font-medium">Update History</h4>
                       {selectedIncident.status !== 'resolved' && (
                         <Button
                           size="sm"
@@ -909,7 +909,7 @@ export default function IncidentsPage() {
                         }}
                       >
                         <Edit className="h-4 w-4 mr-2" />
-                        Mettre à jour
+                        Update
                       </Button>
                     )}
                     <DropdownMenu>

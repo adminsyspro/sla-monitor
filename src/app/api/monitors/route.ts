@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
   const { name, url, type, interval, timeout, groupId, tags, expectedStatusCode, port, checkCertificate, certificateExpiryWarning } = body;
 
   if (!name || !url || !type) {
-    return NextResponse.json({ error: 'Nom, URL et type requis' }, { status: 400 });
+    return NextResponse.json({ error: 'Name, URL and type are required' }, { status: 400 });
   }
 
   const db = getDb();

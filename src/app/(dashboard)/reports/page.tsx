@@ -138,7 +138,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <Header title="Rapports SLA" />
+      <Header title="SLA Reports" />
       <main className="p-6 space-y-6">
         {/* Period Selection & Actions */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -152,7 +152,7 @@ export default function ReportsPage() {
           <div className="flex items-center gap-2">
             <Button variant="outline">
               <Calendar className="mr-2 h-4 w-4" />
-              Période personnalisée
+              Custom period
             </Button>
             <Button variant="outline">
               <Download className="mr-2 h-4 w-4" />
@@ -184,7 +184,7 @@ export default function ReportsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Temps d&apos;indispo.</p>
+                  <p className="text-sm text-muted-foreground">Downtime</p>
                   <p className="text-3xl font-bold">{summary.totalDowntime}min</p>
                 </div>
                 <div className="rounded-lg bg-red-500/10 p-3">
@@ -192,7 +192,7 @@ export default function ReportsPage() {
                 </div>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Total cumulé
+                Cumulative total
               </p>
             </CardContent>
           </Card>
@@ -201,7 +201,7 @@ export default function ReportsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">SLA respecté</p>
+                  <p className="text-sm text-muted-foreground">SLA met</p>
                   <p className="text-3xl font-bold">
                     {summary.slaMetCount}/{summary.slaMetCount + summary.slaBreachedCount}
                   </p>
@@ -211,7 +211,7 @@ export default function ReportsPage() {
                 </div>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Mois conformes
+                Compliant months
               </p>
             </CardContent>
           </Card>
@@ -228,7 +228,7 @@ export default function ReportsPage() {
                 </div>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Total sur la période
+                Total over period
               </p>
             </CardContent>
           </Card>
@@ -239,7 +239,7 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle>Historique des rapports</CardTitle>
             <CardDescription>
-              Rapports SLA mensuels avec détails de disponibilité
+              Monthly SLA reports with uptime details
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -248,7 +248,7 @@ export default function ReportsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : reports.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">Aucun rapport disponible</p>
+              <p className="text-center text-muted-foreground py-8">No reports available</p>
             ) : (
               <div className="space-y-4">
                 {reports.map((report) => (
@@ -326,7 +326,7 @@ export default function ReportsPage() {
                       {/* Actions */}
                       <Button variant="ghost" size="sm">
                         <FileText className="mr-2 h-4 w-4" />
-                        Détails
+                        Details
                       </Button>
                     </div>
                   </div>
@@ -339,7 +339,7 @@ export default function ReportsPage() {
         {/* SLA Targets Overview */}
         <Card>
           <CardHeader>
-            <CardTitle>Objectifs SLA configurés</CardTitle>
+            <CardTitle>Configured SLA Targets</CardTitle>
             <CardDescription>
               Suivi des engagements de niveau de service
             </CardDescription>
@@ -350,7 +350,7 @@ export default function ReportsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : slaTargets.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">Aucun objectif SLA configuré</p>
+              <p className="text-center text-muted-foreground py-8">No SLA targets configured</p>
             ) : (
               <div className="space-y-4">
                 {slaTargets.map((target) => {
@@ -427,8 +427,8 @@ export default function ReportsPage() {
                           />
                           <p className="text-xs text-muted-foreground">
                             {target.excludeMaintenanceWindows
-                              ? 'Maintenances exclues'
-                              : 'Maintenances incluses'}
+                              ? 'Maintenance excluded'
+                              : 'Maintenance included'}
                           </p>
                         </div>
                       </div>

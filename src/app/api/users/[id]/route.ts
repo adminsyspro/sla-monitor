@@ -35,7 +35,7 @@ function toUserResponse(row: UserRow) {
 export async function PUT(request: NextRequest, { params }: RouteContext) {
   const role = request.headers.get('x-user-role');
   if (role !== 'Administrator') {
-    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const { id } = await params;
@@ -45,20 +45,20 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as UserRow | undefined;
   if (!existing) {
-    return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
   if (active === false && existing.role === 'Administrator') {
     const adminCount = db.prepare("SELECT COUNT(*) as cnt FROM users WHERE role = 'Administrator' AND active = 1").get() as { cnt: number };
     if (adminCount.cnt <= 1) {
-      return NextResponse.json({ error: 'Impossible de désactiver le dernier administrateur' }, { status: 400 });
+      return NextResponse.json({ error: 'Cannot deactivate the last administrator' }, { status: 400 });
     }
   }
 
   if (userRole && userRole !== 'Administrator' && existing.role === 'Administrator') {
     const adminCount = db.prepare("SELECT COUNT(*) as cnt FROM users WHERE role = 'Administrator' AND active = 1").get() as { cnt: number };
     if (adminCount.cnt <= 1) {
-      return NextResponse.json({ error: 'Impossible de changer le rôle du dernier administrateur' }, { status: 400 });
+      return NextResponse.json({ error: 'Cannot change the role of the last administrator' }, { status: 400 });
     }
   }
 
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
   if (username !== undefined) {
     const dup = db.prepare('SELECT id FROM users WHERE username = ? AND id != ?').get(username, id);
-    if (dup) return NextResponse.json({ error: "Ce nom d'utilisateur existe déjà" }, { status: 409 });
+    if (dup) return NextResponse.json({ error: 'This username already exists' }, { status: 409 });
     fields.push('username = ?'); values.push(username);
   }
   if (email !== undefined) { fields.push('email = ?'); values.push(email); }
@@ -94,7 +94,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const role = request.headers.get('x-user-role');
   if (role !== 'Administrator') {
-    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const { id } = await params;
@@ -107,7 +107,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as UserRow | undefined;
   if (!existing) {
-    return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
   if (existing.role === 'Administrator') {

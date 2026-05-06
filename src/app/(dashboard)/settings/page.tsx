@@ -80,9 +80,9 @@ export default function SettingsPage() {
       body: JSON.stringify(generalSettings),
     })
     if (res.ok) {
-      setGeneralMsg('Paramètres généraux enregistrés')
+      setGeneralMsg('General settings saved')
     } else {
-      setGeneralError('Erreur lors de la sauvegarde')
+      setGeneralError('Error while saving')
     }
   }
 
@@ -104,27 +104,27 @@ export default function SettingsPage() {
       body: JSON.stringify(ldapConfig),
     })
     if (res.ok) {
-      setLdapMsg('Configuration LDAP enregistrée')
+      setLdapMsg('LDAP configuration saved')
     } else {
-      setLdapError('Erreur lors de la sauvegarde')
+      setLdapError('Error while saving')
     }
   }
 
   return (
     <>
-      <Header title="Paramètres" />
+      <Header title="Settings" />
       <main className="p-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar Navigation */}
           <aside className="lg:w-64 shrink-0">
             <nav className="space-y-1">
               {[
-                { id: 'general', icon: User, label: 'Général' },
-                { id: 'appearance', icon: Palette, label: 'Apparence' },
+                { id: 'general', icon: User, label: 'General' },
+                { id: 'appearance', icon: Palette, label: 'Appearance' },
                 { id: 'notifications', icon: Bell, label: 'Notifications' },
-                { id: 'integrations', icon: Webhook, label: 'Intégrations' },
+                { id: 'integrations', icon: Webhook, label: 'Integrations' },
                 { id: 'api', icon: Key, label: 'API' },
-                { id: 'security', icon: Shield, label: 'Sécurité' },
+                { id: 'security', icon: Shield, label: 'Security' },
                 ...(isAdmin ? [{ id: 'ldap', icon: Server, label: 'LDAP' }] : []),
               ].map((item) => (
                 <button
@@ -148,9 +148,9 @@ export default function SettingsPage() {
             {activeTab === 'general' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Paramètres généraux</CardTitle>
+                  <CardTitle>General Settings</CardTitle>
                   <CardDescription>
-                    Configurez les informations de base de votre compte
+                    Configure your account's basic information
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                   {generalError && <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{generalError}</div>}
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Nom de l&apos;organisation</Label>
+                      <Label htmlFor="name">Organization name</Label>
                       <Input
                         id="name"
                         value={generalSettings.siteName}
@@ -166,7 +166,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email de contact</Label>
+                      <Label htmlFor="email">Contact email</Label>
                       <Input
                         id="email"
                         type="email"
@@ -176,7 +176,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="timezone">Fuseau horaire</Label>
+                    <Label htmlFor="timezone">Timezone</Label>
                     <Input
                       id="timezone"
                       value={generalSettings.timezone}
@@ -184,20 +184,20 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="status-url">URL de la page de statut</Label>
+                    <Label htmlFor="status-url">Status page URL</Label>
                     <div className="flex gap-2">
                       <Input
                         id="status-url"
                         defaultValue="https://status.example.com"
                         readOnly
                       />
-                      <Button variant="outline">Configurer</Button>
+                      <Button variant="outline">Configure</Button>
                     </div>
                   </div>
                   <Separator />
                   <Button onClick={saveGeneral}>
                     <Save className="mr-2 h-4 w-4" />
-                    Enregistrer
+                    Save
                   </Button>
                 </CardContent>
               </Card>
@@ -206,19 +206,19 @@ export default function SettingsPage() {
             {activeTab === 'appearance' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Apparence</CardTitle>
+                  <CardTitle>Appearance</CardTitle>
                   <CardDescription>
-                    Personnalisez l&apos;apparence de l&apos;interface
+                    Customize the interface appearance
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
-                    <Label>Thème</Label>
+                    <Label>Theme</Label>
                     <div className="grid grid-cols-3 gap-4">
                       {[
-                        { value: 'light', icon: Sun, label: 'Clair' },
-                        { value: 'dark', icon: Moon, label: 'Sombre' },
-                        { value: 'system', icon: Globe, label: 'Système' },
+                        { value: 'light', icon: Sun, label: 'Light' },
+                        { value: 'dark', icon: Moon, label: 'Dark' },
+                        { value: 'system', icon: Globe, label: 'System' },
                       ].map((option) => (
                         <button
                           key={option.value}
@@ -246,7 +246,7 @@ export default function SettingsPage() {
                 <CardHeader>
                   <CardTitle>Notifications</CardTitle>
                   <CardDescription>
-                    Configurez comment et quand vous êtes notifié
+                    Configure how and when you are notified
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -254,19 +254,19 @@ export default function SettingsPage() {
                     {[
                       {
                         title: 'Email',
-                        description: 'Recevoir les alertes par email',
+                        description: 'Receive alerts by email',
                         icon: Mail,
                         enabled: true,
                       },
                       {
                         title: 'Slack',
-                        description: 'Notifications dans Slack',
+                        description: 'Notifications in Slack',
                         icon: Bell,
                         enabled: false,
                       },
                       {
                         title: 'Webhook',
-                        description: 'Appels HTTP personnalisés',
+                        description: 'Custom HTTP calls',
                         icon: Webhook,
                         enabled: true,
                       },
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                         <Badge
                           variant={channel.enabled ? 'default' : 'secondary'}
                         >
-                          {channel.enabled ? 'Activé' : 'Désactivé'}
+                          {channel.enabled ? 'Enabled' : 'Disabled'}
                         </Badge>
                       </div>
                     ))}
@@ -301,18 +301,18 @@ export default function SettingsPage() {
             {activeTab === 'api' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Clés API</CardTitle>
+                  <CardTitle>API Keys</CardTitle>
                   <CardDescription>
-                    Gérez vos clés d&apos;accès à l&apos;API
+                    Manage your API access keys
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="rounded-lg border p-4 space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium">Clé de production</h4>
+                        <h4 className="font-medium">Production key</h4>
                         <p className="text-sm text-muted-foreground">
-                          Créée le 15 janvier 2024
+                          Created on January 15, 2024
                         </p>
                       </div>
                       <Badge>Active</Badge>
@@ -323,13 +323,13 @@ export default function SettingsPage() {
                         readOnly
                         className="font-mono"
                       />
-                      <Button variant="outline">Copier</Button>
-                      <Button variant="destructive">Révoquer</Button>
+                      <Button variant="outline">Copy</Button>
+                      <Button variant="destructive">Revoke</Button>
                     </div>
                   </div>
                   <Button>
                     <Key className="mr-2 h-4 w-4" />
-                    Créer une nouvelle clé
+                    Create a new key
                   </Button>
                 </CardContent>
               </Card>
@@ -338,14 +338,14 @@ export default function SettingsPage() {
             {activeTab === 'integrations' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Intégrations</CardTitle>
+                  <CardTitle>Integrations</CardTitle>
                   <CardDescription>
-                    Connectez vos outils externes
+                    Connect your external tools
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Les intégrations seront disponibles prochainement.
+                    Integrations will be available soon.
                   </p>
                 </CardContent>
               </Card>
@@ -354,14 +354,14 @@ export default function SettingsPage() {
             {activeTab === 'security' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Sécurité</CardTitle>
+                  <CardTitle>Security</CardTitle>
                   <CardDescription>
-                    Gérez la sécurité de votre compte
+                    Manage your account security
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Les paramètres de sécurité seront disponibles prochainement.
+                    Security settings will be available soon.
                   </p>
                 </CardContent>
               </Card>
@@ -372,7 +372,7 @@ export default function SettingsPage() {
                 <CardHeader>
                   <CardTitle>Configuration LDAP</CardTitle>
                   <CardDescription>
-                    Configurez l&apos;authentification LDAP / Active Directory
+                    Configure LDAP / Active Directory authentication
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -381,8 +381,8 @@ export default function SettingsPage() {
 
                   <div className="flex items-center justify-between rounded-lg border p-4">
                     <div>
-                      <h4 className="font-medium">Activer LDAP</h4>
-                      <p className="text-sm text-muted-foreground">Autoriser la connexion via annuaire LDAP</p>
+                      <h4 className="font-medium">Enable LDAP</h4>
+                      <p className="text-sm text-muted-foreground">Allow sign-in through an LDAP directory</p>
                     </div>
                     <Switch
                       checked={ldapConfig.enabled}
@@ -392,7 +392,7 @@ export default function SettingsPage() {
 
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>URL du serveur LDAP</Label>
+                      <Label>LDAP server URL</Label>
                       <Input
                         placeholder="ldap://ldap.example.com:389"
                         value={ldapConfig.url}
@@ -408,7 +408,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Bind DN (compte de service)</Label>
+                      <Label>Bind DN (service account)</Label>
                       <Input
                         placeholder="cn=admin,dc=example,dc=com"
                         value={ldapConfig.bindDN}
@@ -416,7 +416,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Mot de passe Bind</Label>
+                      <Label>Bind password</Label>
                       <Input
                         type="password"
                         value={ldapConfig.bindPassword}
@@ -424,26 +424,26 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Filtre de recherche utilisateur</Label>
+                      <Label>User search filter</Label>
                       <Input
                         placeholder="(uid={{username}})"
                         value={ldapConfig.userFilter}
                         onChange={(e) => setLdapConfig({ ...ldapConfig, userFilter: e.target.value })}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Utilisez {'{{username}}'} comme placeholder pour le nom d&apos;utilisateur
+                        Use {'{{username}}'} as the username placeholder
                       </p>
                     </div>
 
                     <Separator />
-                    <h4 className="font-medium">Mapping des groupes</h4>
+                    <h4 className="font-medium">Group Mapping</h4>
                     <p className="text-sm text-muted-foreground">
-                      Associez les groupes LDAP aux rôles de l&apos;application
+                      Map LDAP groups to application roles
                     </p>
 
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label>Groupe Administrateur</Label>
+                        <Label>Administrator group</Label>
                         <Input
                           placeholder="sla-admins"
                           value={ldapConfig.adminGroup}
@@ -451,7 +451,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Groupe Opérateur</Label>
+                        <Label>Operator group</Label>
                         <Input
                           placeholder="sla-operators"
                           value={ldapConfig.operatorGroup}
@@ -464,7 +464,7 @@ export default function SettingsPage() {
                   <Separator />
                   <Button onClick={saveLdap}>
                     <Save className="mr-2 h-4 w-4" />
-                    Enregistrer la configuration LDAP
+                    Save LDAP configuration
                   </Button>
                 </CardContent>
               </Card>

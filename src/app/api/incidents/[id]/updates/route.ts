@@ -27,13 +27,13 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   const { status, message } = body;
 
   if (!status || !message) {
-    return NextResponse.json({ error: 'Statut et message requis' }, { status: 400 });
+    return NextResponse.json({ error: 'Status and message are required' }, { status: 400 });
   }
 
   const db = getDb();
 
   const incident = db.prepare('SELECT id FROM incidents WHERE id = ?').get(incidentId);
-  if (!incident) return NextResponse.json({ error: 'Incident non trouvé' }, { status: 404 });
+  if (!incident) return NextResponse.json({ error: 'Incident not found' }, { status: 404 });
 
   const updateId = crypto.randomUUID();
   db.prepare(

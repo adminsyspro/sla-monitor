@@ -33,7 +33,7 @@ function toUserResponse(row: UserRow) {
 export async function GET(request: NextRequest) {
   const role = request.headers.get('x-user-role');
   if (role !== 'Administrator') {
-    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const db = getDb();
@@ -44,26 +44,26 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const role = request.headers.get('x-user-role');
   if (role !== 'Administrator') {
-    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const body = await request.json();
   const { username, email, firstname, lastname, role: userRole, password, authType } = body;
 
   if (!username || !email || !userRole) {
-    return NextResponse.json({ error: "Nom d'utilisateur, email et rôle requis" }, { status: 400 });
+    return NextResponse.json({ error: 'Username, email and role are required' }, { status: 400 });
   }
 
   const effectiveAuthType = authType || 'local';
   if (effectiveAuthType === 'local' && !password) {
-    return NextResponse.json({ error: 'Mot de passe requis pour les utilisateurs locaux' }, { status: 400 });
+    return NextResponse.json({ error: 'Password is required for local users' }, { status: 400 });
   }
 
   const db = getDb();
 
   const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
   if (existing) {
-    return NextResponse.json({ error: "Ce nom d'utilisateur existe déjà" }, { status: 409 });
+    return NextResponse.json({ error: 'This username already exists' }, { status: 409 });
   }
 
   const id = crypto.randomUUID();

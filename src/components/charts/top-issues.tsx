@@ -55,10 +55,10 @@ export function TopIssuesCard({ className }: TopIssuesCardProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-medium flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-yellow-500" />
-            Services à surveiller
+            Services to Watch
           </CardTitle>
           <Button variant="ghost" size="sm" className="text-xs">
-            Voir tout
+            View all
             <ArrowRight className="ml-1 h-3 w-3" />
           </Button>
         </div>
@@ -66,11 +66,11 @@ export function TopIssuesCard({ className }: TopIssuesCardProps) {
       <CardContent>
         {loading ? (
           <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">
-            Chargement…
+            Loading...
           </div>
         ) : issues.length === 0 ? (
           <div className="flex items-center justify-center h-24">
-            <p className="text-muted-foreground text-center">Aucun service à surveiller</p>
+            <p className="text-muted-foreground text-center">No services to watch</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -113,7 +113,7 @@ export function TopIssuesCard({ className }: TopIssuesCardProps) {
                     ))}
                     {service.lastErrors.length === 0 && service.failuresCount > 0 && (
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        {service.failuresCount} échec{service.failuresCount > 1 ? 's' : ''}
+                        {service.failuresCount} failure{service.failuresCount > 1 ? 's' : ''}
                       </Badge>
                     )}
                   </div>
@@ -169,11 +169,11 @@ export function TopIssuesCompact({ className }: { className?: string }) {
   return (
     <Card className={cn('', className)}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Top 3 à surveiller</CardTitle>
+        <CardTitle className="text-sm font-medium">Top 3 to Watch</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {issues.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Aucune donnée</p>
+          <p className="text-xs text-muted-foreground">No data</p>
         ) : (
           issues.slice(0, 3).map((service, index) => (
             <div

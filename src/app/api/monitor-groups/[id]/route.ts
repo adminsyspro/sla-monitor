@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
 
   const existing = db.prepare('SELECT id FROM monitor_groups WHERE id = ?').get(id);
-  if (!existing) return NextResponse.json({ error: 'Groupe non trouvé' }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: 'Group not found' }, { status: 404 });
 
   const fields: string[] = [];
   const values: unknown[] = [];

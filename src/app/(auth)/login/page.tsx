@@ -43,7 +43,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Nom d'utilisateur ou mot de passe invalide");
+        setError(data.error || 'Invalid username or password');
         return;
       }
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
       router.push('/dashboard');
     } catch {
-      setError('Erreur de connexion. Veuillez réessayer.');
+      setError('Connection error. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +76,7 @@ export default function LoginPage() {
             <Activity className="h-7 w-7 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl">SLA Monitor</CardTitle>
-          <CardDescription>Connectez-vous pour accéder au tableau de bord</CardDescription>
+          <CardDescription>Sign in to access the dashboard</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -114,7 +114,7 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">Nom d&apos;utilisateur</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
                 value={formData.username}
@@ -124,7 +124,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -146,7 +146,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Connexion...' : 'Se connecter'}
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </CardFooter>
         </form>

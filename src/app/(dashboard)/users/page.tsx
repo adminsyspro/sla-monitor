@@ -103,7 +103,7 @@ export default function UsersPage() {
         });
         if (!res.ok) {
           const data = await res.json();
-          setError(data.error || 'Erreur');
+          setError(data.error || 'Error');
           return;
         }
       } else {
@@ -114,25 +114,25 @@ export default function UsersPage() {
         });
         if (!res.ok) {
           const data = await res.json();
-          setError(data.error || 'Erreur');
+          setError(data.error || 'Error');
           return;
         }
       }
       setDialogOpen(false);
       fetchUsers();
     } catch {
-      setError('Erreur de connexion');
+      setError('Connection error');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cet utilisateur ?')) return;
+    if (!confirm('Delete this user?')) return;
     const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
     if (res.ok) {
       fetchUsers();
     } else {
       const data = await res.json();
-      alert(data.error || 'Erreur');
+      alert(data.error || 'Error');
     }
   };
 
@@ -146,29 +146,29 @@ export default function UsersPage() {
       fetchUsers();
     } else {
       const data = await res.json();
-      alert(data.error || 'Erreur');
+      alert(data.error || 'Error');
     }
   };
 
   const roleLabel = (role: string) => {
     switch (role) {
-      case 'Administrator': return 'Administrateur';
-      case 'Operator': return 'Opérateur';
-      default: return 'Utilisateur';
+      case 'Administrator': return 'Administrator';
+      case 'Operator': return 'Operator';
+      default: return 'User';
     }
   };
 
   return (
     <>
-      <Header title="Gestion des utilisateurs" />
+      <Header title="User Management" />
       <main className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
-            {users.length} utilisateur{users.length > 1 ? 's' : ''}
+            {users.length} user{users.length > 1 ? 's' : ''}
           </p>
           <Button onClick={openCreate}>
             <Plus className="mr-2 h-4 w-4" />
-            Nouvel utilisateur
+            New user
           </Button>
         </div>
 
@@ -206,7 +206,7 @@ export default function UsersPage() {
                       onClick={() => handleToggleActive(user)}
                     >
                       {user.active ? <Check className="mr-1 h-3 w-3" /> : <X className="mr-1 h-3 w-3" />}
-                      {user.active ? 'Actif' : 'En attente'}
+                      {user.active ? 'Active' : 'Pending'}
                     </Badge>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(user)}>
                       <Pencil className="h-4 w-4" />
@@ -224,7 +224,7 @@ export default function UsersPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingUser ? 'Modifier utilisateur' : 'Nouvel utilisateur'}</DialogTitle>
+              <DialogTitle>{editingUser ? 'Edit user' : 'New user'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {error && (
@@ -232,16 +232,16 @@ export default function UsersPage() {
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Prénom</Label>
+                  <Label>First name</Label>
                   <Input value={formData.firstname} onChange={(e) => setFormData({ ...formData, firstname: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Nom</Label>
+                  <Label>Last name</Label>
                   <Input value={formData.lastname} onChange={(e) => setFormData({ ...formData, lastname: e.target.value })} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Nom d&apos;utilisateur</Label>
+                <Label>Username</Label>
                 <Input value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} required />
               </div>
               <div className="space-y-2">
@@ -249,18 +249,18 @@ export default function UsersPage() {
                 <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
               </div>
               <div className="space-y-2">
-                <Label>Rôle</Label>
+                <Label>Role</Label>
                 <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Administrator">Administrateur</SelectItem>
-                    <SelectItem value="Operator">Opérateur</SelectItem>
-                    <SelectItem value="User">Utilisateur</SelectItem>
+                    <SelectItem value="Administrator">Administrator</SelectItem>
+                    <SelectItem value="Operator">Operator</SelectItem>
+                    <SelectItem value="User">User</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{editingUser ? 'Nouveau mot de passe (laisser vide pour conserver)' : 'Mot de passe'}</Label>
+                <Label>{editingUser ? 'New password (leave blank to keep current)' : 'Password'}</Label>
                 <Input
                   type="password"
                   value={formData.password}
@@ -270,8 +270,8 @@ export default function UsersPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Annuler</Button>
-              <Button onClick={handleSave}>{editingUser ? 'Enregistrer' : 'Créer'}</Button>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleSave}>{editingUser ? 'Save' : 'Create'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

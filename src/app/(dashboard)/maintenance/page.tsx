@@ -60,7 +60,7 @@ function getStatusBadge(status: MaintenanceWindow['status']) {
       return (
         <Badge variant="secondary" className="gap-1">
           <Clock className="h-3 w-3" />
-          Planifiée
+          Scheduled
         </Badge>
       )
     case 'in_progress':
@@ -74,13 +74,13 @@ function getStatusBadge(status: MaintenanceWindow['status']) {
       return (
         <Badge variant="operational" className="gap-1">
           <CheckCircle2 className="h-3 w-3" />
-          Terminée
+          Completed
         </Badge>
       )
     case 'cancelled':
       return (
         <Badge variant="destructive" className="gap-1">
-          Annulée
+          Canceled
         </Badge>
       )
   }
@@ -104,7 +104,7 @@ function getTimeUntil(date: string): string {
   const target = new Date(date)
   const diffMs = target.getTime() - now.getTime()
 
-  if (diffMs < 0) return 'Passé'
+  if (diffMs < 0) return 'Past'
 
   const days = Math.floor(diffMs / 86400000)
   const hours = Math.floor((diffMs % 86400000) / 3600000)
@@ -233,7 +233,7 @@ export default function MaintenancePage() {
 
   return (
     <>
-      <Header title="Maintenance planifiée" />
+      <Header title="Scheduled Maintenance" />
       <main className="p-6 space-y-6">
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-4">
@@ -245,7 +245,7 @@ export default function MaintenancePage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{upcomingCount}</p>
-                  <p className="text-sm text-muted-foreground">Planifiées</p>
+                  <p className="text-sm text-muted-foreground">Scheduled</p>
                 </div>
               </div>
             </CardContent>
@@ -271,7 +271,7 @@ export default function MaintenancePage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{completedCount}</p>
-                  <p className="text-sm text-muted-foreground">Terminées ce mois</p>
+                  <p className="text-sm text-muted-foreground">Completed this month</p>
                 </div>
               </div>
             </CardContent>
@@ -284,7 +284,7 @@ export default function MaintenancePage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{totalHours}h {totalMins}m</p>
-                  <p className="text-sm text-muted-foreground">Temps total ce mois</p>
+                  <p className="text-sm text-muted-foreground">Total time this month</p>
                 </div>
               </div>
             </CardContent>
@@ -296,7 +296,7 @@ export default function MaintenancePage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Rechercher une maintenance..."
+              placeholder="Search maintenance..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-64 pl-9"
@@ -306,8 +306,8 @@ export default function MaintenancePage() {
             <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
               <TabsList>
                 <TabsTrigger value="all">Toutes</TabsTrigger>
-                <TabsTrigger value="upcoming">À venir</TabsTrigger>
-                <TabsTrigger value="completed">Terminées</TabsTrigger>
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
             </Tabs>
             <Button onClick={() => setCreateDialogOpen(true)}>
@@ -321,7 +321,7 @@ export default function MaintenancePage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="mt-4 text-sm text-muted-foreground">Chargement des maintenances...</p>
+            <p className="mt-4 text-sm text-muted-foreground">Loading maintenance windows...</p>
           </div>
         ) : (
           /* Maintenance List */
@@ -352,7 +352,7 @@ export default function MaintenancePage() {
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Calendar className="h-4 w-4" />
                             <span>
-                              {new Date(maintenance.scheduledStart).toLocaleDateString('fr-FR', {
+                              {new Date(maintenance.scheduledStart).toLocaleDateString('en-US', {
                                 weekday: 'long',
                                 day: 'numeric',
                                 month: 'long',
@@ -362,19 +362,19 @@ export default function MaintenancePage() {
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Clock className="h-4 w-4" />
                             <span>
-                              {new Date(maintenance.scheduledStart).toLocaleTimeString('fr-FR', {
+                              {new Date(maintenance.scheduledStart).toLocaleTimeString('en-US', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
                               {' → '}
-                              {new Date(maintenance.scheduledEnd).toLocaleTimeString('fr-FR', {
+                              {new Date(maintenance.scheduledEnd).toLocaleTimeString('en-US', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
                             </span>
                           </div>
                           <Badge variant="outline">
-                            Durée: {formatDuration(maintenance.scheduledStart, maintenance.scheduledEnd)}
+                            Duration: {formatDuration(maintenance.scheduledStart, maintenance.scheduledEnd)}
                           </Badge>
                           {maintenance.status === 'scheduled' && (
                             <Badge variant="secondary" className="text-blue-500">
@@ -386,9 +386,9 @@ export default function MaintenancePage() {
                         {/* Affected Services */}
                         {maintenance.affectedMonitors.length > 0 && (
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Services affectés:</span>
+                            <span className="text-sm text-muted-foreground">Affected services:</span>
                             <Badge variant="secondary">
-                              {maintenance.affectedMonitors.length} service{maintenance.affectedMonitors.length > 1 ? 's' : ''} affecté{maintenance.affectedMonitors.length > 1 ? 's' : ''}
+                              {maintenance.affectedMonitors.length} affected service{maintenance.affectedMonitors.length > 1 ? 's' : ''}
                             </Badge>
                           </div>
                         )}
@@ -398,9 +398,9 @@ export default function MaintenancePage() {
                           <div className="flex items-center gap-2 text-sm text-green-600">
                             <CheckCircle2 className="h-4 w-4" />
                             <span>
-                              Terminée en {formatDuration(maintenance.actualStart, maintenance.actualEnd)}
+                              Completed in {formatDuration(maintenance.actualStart, maintenance.actualEnd)}
                               {' '}
-                              (prévu: {formatDuration(maintenance.scheduledStart, maintenance.scheduledEnd)})
+                              (planned: {formatDuration(maintenance.scheduledStart, maintenance.scheduledEnd)})
                             </span>
                           </div>
                         )}
@@ -412,7 +412,7 @@ export default function MaintenancePage() {
                           <>
                             <Button variant="outline" size="sm" onClick={() => handleStart(maintenance.id)}>
                               <Play className="h-4 w-4 mr-1" />
-                              Démarrer
+                              Start
                             </Button>
                             <Button variant="ghost" size="icon">
                               <Edit className="h-4 w-4" />
@@ -425,7 +425,7 @@ export default function MaintenancePage() {
                         {maintenance.status === 'in_progress' && (
                           <Button variant="outline" size="sm" onClick={() => handleComplete(maintenance.id)}>
                             <CheckCircle2 className="h-4 w-4 mr-1" />
-                            Terminer
+                            Complete
                           </Button>
                         )}
                       </div>
@@ -438,9 +438,9 @@ export default function MaintenancePage() {
                 <div className="rounded-full bg-muted p-4">
                   <Calendar className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold">Aucune maintenance planifiée</h3>
+                <h3 className="mt-4 text-lg font-semibold">No scheduled maintenance</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Planifiez une fenêtre de maintenance pour informer vos utilisateurs
+                  Schedule a maintenance window to inform your users
                 </p>
                 <Button className="mt-4" onClick={() => setCreateDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
@@ -457,7 +457,7 @@ export default function MaintenancePage() {
             <DialogHeader>
               <DialogTitle>Planifier une maintenance</DialogTitle>
               <DialogDescription>
-                Créez une nouvelle fenêtre de maintenance planifiée.
+                Create a new scheduled maintenance window.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -465,7 +465,7 @@ export default function MaintenancePage() {
                 <Label htmlFor="title">Titre</Label>
                 <Input
                   id="title"
-                  placeholder="Ex: Mise à jour base de données"
+                  placeholder="Example: Database update"
                   value={newMaintenance.title}
                   onChange={(e) => setNewMaintenance((prev) => ({ ...prev, title: e.target.value }))}
                 />
@@ -474,14 +474,14 @@ export default function MaintenancePage() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  placeholder="Décrivez les travaux prévus..."
+                  placeholder="Describe the planned work..."
                   value={newMaintenance.description}
                   onChange={(e) => setNewMaintenance((prev) => ({ ...prev, description: e.target.value }))}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="scheduledStart">Début prévu</Label>
+                  <Label htmlFor="scheduledStart">Scheduled start</Label>
                   <Input
                     id="scheduledStart"
                     type="datetime-local"
@@ -490,7 +490,7 @@ export default function MaintenancePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="scheduledEnd">Fin prévue</Label>
+                  <Label htmlFor="scheduledEnd">Scheduled end</Label>
                   <Input
                     id="scheduledEnd"
                     type="datetime-local"
@@ -502,7 +502,7 @@ export default function MaintenancePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                Annuler
+                Cancel
               </Button>
               <Button
                 onClick={handleCreate}

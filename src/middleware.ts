@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
     if (ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
       if (userRole !== 'Administrator') {
         if (pathname.startsWith('/api/')) {
-          return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
 function handleUnauthorized(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname.startsWith('/api/')) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   return NextResponse.redirect(new URL('/login', request.url));
 }

@@ -59,7 +59,7 @@ export async function GET() {
       id: m.id,
       type: m.type,
       title: m.title,
-      description: `Maintenance ${m.status === 'completed' ? 'terminée' : m.status === 'in_progress' ? 'démarrée' : 'planifiée'}`,
+      description: `Maintenance ${m.status === 'completed' ? 'completed' : m.status === 'in_progress' ? 'started' : 'scheduled'}`,
       timestamp: fromEpoch(m.timestamp),
       user: m.created_by,
     })),

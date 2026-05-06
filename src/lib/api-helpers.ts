@@ -7,7 +7,7 @@ export function checkRole(request: NextRequest, ...allowedRoles: UserRole[]): { 
   const username = request.headers.get('x-user-name') || '';
 
   if (!role || !allowedRoles.includes(role)) {
-    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   return { userId, role, username };

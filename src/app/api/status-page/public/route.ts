@@ -12,7 +12,7 @@ export async function GET() {
   } | undefined;
 
   if (!config || !config.enabled) {
-    return NextResponse.json({ error: 'Page de statut désactivée' }, { status: 404 });
+    return NextResponse.json({ error: 'Status page disabled' }, { status: 404 });
   }
 
   const monitorIds = parseJsonArray(config.monitor_ids);

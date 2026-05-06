@@ -56,10 +56,10 @@ export default function ProfilePage() {
         role: data.role,
         avatar: data.avatar,
       });
-      setProfileMsg('Profil mis à jour');
+      setProfileMsg('Profile updated');
     } else {
       const data = await res.json();
-      setProfileError(data.error || 'Erreur');
+      setProfileError(data.error || 'Error');
     }
   };
 
@@ -67,11 +67,11 @@ export default function ProfilePage() {
     setPasswordMsg('');
     setPasswordError('');
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('Les mots de passe ne correspondent pas');
+      setPasswordError('Passwords do not match');
       return;
     }
     if (passwordData.newPassword.length < 4) {
-      setPasswordError('Le mot de passe doit contenir au moins 4 caractères');
+      setPasswordError('Password must contain at least 4 characters');
       return;
     }
     const res = await fetch('/api/profile', {
@@ -83,19 +83,19 @@ export default function ProfilePage() {
       }),
     });
     if (res.ok) {
-      setPasswordMsg('Mot de passe modifié');
+      setPasswordMsg('Password changed');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } else {
       const data = await res.json();
-      setPasswordError(data.error || 'Erreur');
+      setPasswordError(data.error || 'Error');
     }
   };
 
   const roleLabel = (role: string) => {
     switch (role) {
-      case 'Administrator': return 'Administrateur';
-      case 'Operator': return 'Opérateur';
-      default: return 'Utilisateur';
+      case 'Administrator': return 'Administrator';
+      case 'Operator': return 'Operator';
+      default: return 'User';
     }
   };
 
@@ -103,13 +103,13 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Header title="Mon profil" />
+      <Header title="My Profile" />
       <main className="p-6 space-y-6 max-w-2xl">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Informations personnelles</CardTitle>
+                <CardTitle>Personal Information</CardTitle>
                 <CardDescription>@{user.username}</CardDescription>
               </div>
               <Badge>{roleLabel(user.role)}</Badge>
@@ -120,11 +120,11 @@ export default function ProfilePage() {
             {profileError && <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{profileError}</div>}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Prénom</Label>
+                <Label>First name</Label>
                 <Input value={profileData.firstname} onChange={(e) => setProfileData({ ...profileData, firstname: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Nom</Label>
+                <Label>Last name</Label>
                 <Input value={profileData.lastname} onChange={(e) => setProfileData({ ...profileData, lastname: e.target.value })} />
               </div>
             </div>
@@ -132,31 +132,31 @@ export default function ProfilePage() {
               <Label>Email</Label>
               <Input type="email" value={profileData.email} onChange={(e) => setProfileData({ ...profileData, email: e.target.value })} />
             </div>
-            <Button onClick={handleProfileSave}>Enregistrer</Button>
+            <Button onClick={handleProfileSave}>Save</Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Changer le mot de passe</CardTitle>
-            <CardDescription>Uniquement pour les comptes locaux</CardDescription>
+            <CardTitle>Change Password</CardTitle>
+            <CardDescription>Only for local accounts</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {passwordMsg && <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-600">{passwordMsg}</div>}
             {passwordError && <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{passwordError}</div>}
             <div className="space-y-2">
-              <Label>Mot de passe actuel</Label>
+              <Label>Current password</Label>
               <Input type="password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Nouveau mot de passe</Label>
+              <Label>New password</Label>
               <Input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Confirmer le nouveau mot de passe</Label>
+              <Label>Confirm new password</Label>
               <Input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} />
             </div>
-            <Button onClick={handlePasswordSave}>Changer le mot de passe</Button>
+            <Button onClick={handlePasswordSave}>Change password</Button>
           </CardContent>
         </Card>
       </main>

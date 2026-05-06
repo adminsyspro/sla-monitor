@@ -108,17 +108,17 @@ function getTypeIcon(type: MonitorType) {
 function getStatusConfig(status: MonitorStatus) {
   switch (status) {
     case 'operational':
-      return { label: 'Opérationnel', color: 'bg-green-500', variant: 'operational' as const }
+      return { label: 'Operational', color: 'bg-green-500', variant: 'operational' as const }
     case 'degraded':
-      return { label: 'Dégradé', color: 'bg-yellow-500', variant: 'degraded' as const }
+      return { label: 'Degraded', color: 'bg-yellow-500', variant: 'degraded' as const }
     case 'partial':
-      return { label: 'Panne partielle', color: 'bg-orange-500', variant: 'partial' as const }
+      return { label: 'Partial outage', color: 'bg-orange-500', variant: 'partial' as const }
     case 'major':
-      return { label: 'Panne majeure', color: 'bg-red-500', variant: 'major' as const }
+      return { label: 'Major outage', color: 'bg-red-500', variant: 'major' as const }
     case 'maintenance':
       return { label: 'Maintenance', color: 'bg-blue-500', variant: 'maintenance' as const }
     default:
-      return { label: 'Inconnu', color: 'bg-gray-500', variant: 'secondary' as const }
+      return { label: 'Unknown', color: 'bg-gray-500', variant: 'secondary' as const }
   }
 }
 
@@ -331,7 +331,7 @@ export default function MonitorsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Opérationnels</p>
+                  <p className="text-sm text-muted-foreground">Operational</p>
                   <p className="text-2xl font-bold text-green-500">{statusCounts.operational}</p>
                 </div>
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
@@ -345,7 +345,7 @@ export default function MonitorsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Dégradés</p>
+                  <p className="text-sm text-muted-foreground">Degraded</p>
                   <p className="text-2xl font-bold text-yellow-500">{statusCounts.degraded}</p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-yellow-500" />
@@ -359,7 +359,7 @@ export default function MonitorsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">En panne</p>
+                  <p className="text-sm text-muted-foreground">Down</p>
                   <p className="text-2xl font-bold text-red-500">{statusCounts.major}</p>
                 </div>
                 <X className="h-8 w-8 text-red-500" />
@@ -370,7 +370,7 @@ export default function MonitorsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Uptime moyen</p>
+                  <p className="text-sm text-muted-foreground">Average uptime</p>
                   <p className="text-2xl font-bold">
                     {Object.keys(uptimeMap).length > 0
                       ? (Object.values(uptimeMap).reduce((a, b) => a + b.uptime, 0) / Object.keys(uptimeMap).length).toFixed(2) + '%'
@@ -392,7 +392,7 @@ export default function MonitorsPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Rechercher..."
+                    placeholder="Search..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-48 pl-9"
@@ -405,7 +405,7 @@ export default function MonitorsPage() {
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous types</SelectItem>
+                    <SelectItem value="all">All types</SelectItem>
                     <SelectItem value="http">
                       <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4" /> HTTP ({typeCounts.http})
@@ -440,7 +440,7 @@ export default function MonitorsPage() {
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={clearFilters}>
                     <X className="h-4 w-4 mr-1" />
-                    Effacer filtres
+                    Clear filters
                   </Button>
                 )}
               </div>
@@ -449,18 +449,18 @@ export default function MonitorsPage() {
                 {/* Status Tabs */}
                 <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
                   <TabsList>
-                    <TabsTrigger value="all">Tous</TabsTrigger>
+                    <TabsTrigger value="all">All</TabsTrigger>
                     <TabsTrigger value="operational" className="gap-1">
                       <div className="h-2 w-2 rounded-full bg-green-500" />
                       OK
                     </TabsTrigger>
                     <TabsTrigger value="degraded" className="gap-1">
                       <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                      Dégradé
+                      Degraded
                     </TabsTrigger>
                     <TabsTrigger value="major" className="gap-1">
                       <div className="h-2 w-2 rounded-full bg-red-500" />
-                      Panne
+                      Outage
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
@@ -489,7 +489,7 @@ export default function MonitorsPage() {
 
                 <Button onClick={() => setIsCreateDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Nouveau
+                  New
                 </Button>
               </div>
             </div>
@@ -499,7 +499,7 @@ export default function MonitorsPage() {
         {/* Results count */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {loading ? 'Chargement...' : `${filteredMonitors.length} monitor${filteredMonitors.length > 1 ? 's' : ''} trouvé${filteredMonitors.length > 1 ? 's' : ''}`}
+            {loading ? 'Loading...' : `${filteredMonitors.length} monitor${filteredMonitors.length > 1 ? 's' : ''} found`}
           </p>
         </div>
 
@@ -550,7 +550,7 @@ export default function MonitorsPage() {
                           <p className="text-sm font-medium">
                             {uptimeMap[monitor.id] ? uptimeMap[monitor.id].avgResponseTime + 'ms' : '—'}
                           </p>
-                          <p className="text-xs text-muted-foreground">latence</p>
+                          <p className="text-xs text-muted-foreground">latency</p>
                         </div>
                         <Badge variant={statusConfig.variant as any}>{statusConfig.label}</Badge>
                         <DropdownMenu>
@@ -562,16 +562,16 @@ export default function MonitorsPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
                               <Edit className="h-4 w-4 mr-2" />
-                              Modifier
+                              Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePause(monitor.id) }}>
                               <Pause className="h-4 w-4 mr-2" />
-                              Mettre en pause
+                              Pause
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(monitor.id) }}>
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Supprimer
+                              Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -587,16 +587,16 @@ export default function MonitorsPage() {
             <div className="rounded-full bg-muted p-4">
               <Search className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold">Aucun monitor trouvé</h3>
+            <h3 className="mt-4 text-lg font-semibold">No monitors found</h3>
             <p className="mt-2 text-sm text-muted-foreground">
               {hasActiveFilters
-                ? 'Essayez de modifier vos filtres'
-                : 'Commencez par créer votre premier monitor'}
+                ? 'Try changing your filters'
+                : 'Start by creating your first monitor'}
             </p>
             {!hasActiveFilters && (
               <Button className="mt-4" onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Créer un monitor
+                Create a monitor
               </Button>
             )}
           </div>
@@ -631,22 +631,22 @@ export default function MonitorsPage() {
                       </Badge>
                       {selectedMonitor.enabled ? (
                         <Badge variant="secondary" className="gap-1">
-                          <Play className="h-3 w-3" /> Actif
+                          <Play className="h-3 w-3" /> Active
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="gap-1">
-                          <Pause className="h-3 w-3" /> En pause
+                          <Pause className="h-3 w-3" /> Paused
                         </Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="outline" size="sm">
                         <Edit className="h-4 w-4 mr-1" />
-                        Modifier
+                        Edit
                       </Button>
                       <Button variant="outline" size="sm">
                         <RefreshCw className="h-4 w-4 mr-1" />
-                        Tester
+                        Test
                       </Button>
                     </div>
                   </div>
@@ -657,17 +657,17 @@ export default function MonitorsPage() {
                       <p className="text-2xl font-bold text-green-500">
                         {detailUptime ? detailUptime.uptime.toFixed(2) + '%' : '—'}
                       </p>
-                      <p className="text-xs text-muted-foreground">Uptime 30j</p>
+                      <p className="text-xs text-muted-foreground">30d uptime</p>
                     </div>
                     <div className="rounded-lg border p-3 text-center">
                       <p className="text-2xl font-bold">
                         {detailUptime ? detailUptime.avgResponseTime + 'ms' : '—'}
                       </p>
-                      <p className="text-xs text-muted-foreground">Latence moy.</p>
+                      <p className="text-xs text-muted-foreground">Avg. latency</p>
                     </div>
                     <div className="rounded-lg border p-3 text-center">
                       <p className="text-2xl font-bold">{selectedMonitor.interval}s</p>
-                      <p className="text-xs text-muted-foreground">Intervalle</p>
+                      <p className="text-xs text-muted-foreground">Interval</p>
                     </div>
                     <div className="rounded-lg border p-3 text-center">
                       <p className="text-2xl font-bold">
@@ -680,8 +680,8 @@ export default function MonitorsPage() {
                   {/* Uptime Bar */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Historique de disponibilité</h4>
-                      <span className="text-sm text-muted-foreground">90 derniers jours</span>
+                      <h4 className="font-medium">Uptime History</h4>
+                      <span className="text-sm text-muted-foreground">Last 90 days</span>
                     </div>
                     <UptimeBar data={uptimeData} />
                   </div>
@@ -700,7 +700,7 @@ export default function MonitorsPage() {
                       </div>
                       {selectedMonitor.expectedStatusCode && (
                         <div className="space-y-1">
-                          <p className="text-muted-foreground">Code HTTP attendu</p>
+                          <p className="text-muted-foreground">Expected HTTP code</p>
                           <p>{selectedMonitor.expectedStatusCode}</p>
                         </div>
                       )}
@@ -718,14 +718,14 @@ export default function MonitorsPage() {
                   {/* Recent Checks */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Vérifications récentes</h4>
-                      <Button variant="ghost" size="sm">Voir tout</Button>
+                      <h4 className="font-medium">Recent Checks</h4>
+                      <Button variant="ghost" size="sm">View all</Button>
                     </div>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {detailLoading ? (
-                        <p className="text-sm text-muted-foreground py-4 text-center">Chargement...</p>
+                        <p className="text-sm text-muted-foreground py-4 text-center">Loading...</p>
                       ) : checkHistory.length === 0 ? (
-                        <p className="text-sm text-muted-foreground py-4 text-center">Aucune vérification</p>
+                        <p className="text-sm text-muted-foreground py-4 text-center">No checks</p>
                       ) : checkHistory.slice(0, 15).map((check) => (
                         <div
                           key={check.id}
@@ -737,7 +737,7 @@ export default function MonitorsPage() {
                               check.status === 'operational' ? 'bg-green-500' : 'bg-red-500'
                             )} />
                             <span className="text-muted-foreground">
-                              {new Date(check.timestamp).toLocaleTimeString('fr-FR')}
+                              {new Date(check.timestamp).toLocaleTimeString('en-US')}
                             </span>
                           </div>
                           <div className="flex items-center gap-4">
@@ -772,8 +772,8 @@ export default function MonitorsPage() {
 
                   {/* Metadata */}
                   <div className="text-xs text-muted-foreground space-y-1">
-                    <p>Créé le: {formatDate(selectedMonitor.createdAt)}</p>
-                    <p>Dernière modification: {formatDate(selectedMonitor.updatedAt)}</p>
+                    <p>Created: {formatDate(selectedMonitor.createdAt)}</p>
+                    <p>Last modified: {formatDate(selectedMonitor.updatedAt)}</p>
                   </div>
                 </div>
               </>
@@ -785,14 +785,14 @@ export default function MonitorsPage() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Créer un nouveau monitor</DialogTitle>
+              <DialogTitle>Create a new monitor</DialogTitle>
               <DialogDescription>
-                Configurez un nouveau point de surveillance pour vos services.
+                Configure a new monitoring endpoint for your services.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label>Nom</Label>
+                <Label>Name</Label>
                 <Input
                   placeholder="Ex: API Production"
                   value={createForm.name}
@@ -812,12 +812,12 @@ export default function MonitorsPage() {
                     <SelectItem value="http">HTTP(S)</SelectItem>
                     <SelectItem value="tcp">TCP</SelectItem>
                     <SelectItem value="ping">Ping</SelectItem>
-                    <SelectItem value="ssl">Certificat SSL</SelectItem>
+                    <SelectItem value="ssl">SSL Certificate</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>URL ou Hôte</Label>
+                <Label>URL or Host</Label>
                 <Input
                   placeholder="https://api.example.com/health"
                   value={createForm.url}
@@ -826,7 +826,7 @@ export default function MonitorsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Intervalle (secondes)</Label>
+                  <Label>Interval (seconds)</Label>
                   <Input
                     type="number"
                     value={createForm.interval}
@@ -845,10 +845,10 @@ export default function MonitorsPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Annuler
+                Cancel
               </Button>
               <Button onClick={handleCreate} disabled={creating || !createForm.name || !createForm.url}>
-                {creating ? 'Création...' : 'Créer le monitor'}
+                {creating ? 'Creating...' : 'Create monitor'}
               </Button>
             </DialogFooter>
           </DialogContent>

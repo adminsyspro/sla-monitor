@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -22,7 +22,7 @@ interface DatePickerProps {
 export function DatePicker({
   date,
   onSelect,
-  placeholder = 'Sélectionner une date',
+  placeholder = 'Select a date',
   className,
 }: DatePickerProps) {
   const [currentMonth, setCurrentMonth] = React.useState(date || new Date())
@@ -39,7 +39,7 @@ export function DatePicker({
     1
   ).getDay()
 
-  const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1
+  const adjustedFirstDay = firstDayOfMonth
 
   const prevMonth = () => {
     setCurrentMonth(
@@ -112,7 +112,7 @@ export function DatePicker({
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, 'dd/MM/yyyy', { locale: fr }) : placeholder}
+          {date ? format(date, 'MM/dd/yyyy', { locale: enUS }) : placeholder}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -122,32 +122,32 @@ export function DatePicker({
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm font-medium">
-              {format(currentMonth, 'MMMM yyyy', { locale: fr })}
+              {format(currentMonth, 'MMMM yyyy', { locale: enUS })}
             </span>
             <Button variant="ghost" size="icon" onClick={nextMonth}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground mb-1">
-            <div>Lu</div>
-            <div>Ma</div>
-            <div>Me</div>
-            <div>Je</div>
-            <div>Ve</div>
+            <div>Su</div>
+            <div>Mo</div>
+            <div>Tu</div>
+            <div>We</div>
+            <div>Th</div>
+            <div>Fr</div>
             <div>Sa</div>
-            <div>Di</div>
           </div>
           <div className="grid grid-cols-7 gap-1">{days}</div>
           <div className="mt-3 pt-3 border-t flex justify-between">
             <Button variant="ghost" size="sm" onClick={() => onSelect(undefined)}>
-              Effacer
+              Clear
             </Button>
             <Button variant="ghost" size="sm" onClick={() => {
               const today = new Date()
               setCurrentMonth(today)
               onSelect(today)
             }}>
-              Aujourd'hui
+              Today
             </Button>
           </div>
         </div>
@@ -169,14 +169,14 @@ export function DateRangePicker({ from, to, onSelect, className }: DateRangePick
       <DatePicker
         date={from}
         onSelect={(date) => onSelect({ from: date, to })}
-        placeholder="Date début"
+        placeholder="Start date"
         className="w-36"
       />
       <span className="text-muted-foreground">→</span>
       <DatePicker
         date={to}
         onSelect={(date) => onSelect({ from, to: date })}
-        placeholder="Date fin"
+        placeholder="End date"
         className="w-36"
       />
     </div>

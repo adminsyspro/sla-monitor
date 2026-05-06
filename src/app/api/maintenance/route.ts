@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const { title, description, affectedMonitors, scheduledStart, scheduledEnd } = body;
 
   if (!title || !scheduledStart || !scheduledEnd) {
-    return NextResponse.json({ error: 'Titre, début et fin requis' }, { status: 400 });
+    return NextResponse.json({ error: 'Title, start and end are required' }, { status: 400 });
   }
 
   const db = getDb();

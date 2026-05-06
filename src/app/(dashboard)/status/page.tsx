@@ -57,8 +57,8 @@ const defaultConfig: StatusPageConfig = {
   enabled: true,
   subdomain: '',
   customDomain: '',
-  title: 'État des services',
-  description: 'Surveillez la disponibilité de nos services en temps réel',
+  title: 'Service Status',
+  description: 'Monitor our service availability in real time',
   theme: 'auto',
   accentColor: '#3b82f6',
   showUptime: true,
@@ -118,8 +118,8 @@ function getStatusIcon(status: string) {
 
 function getStatusLabel(status: string) {
   switch (status) {
-    case 'operational': return 'Opérationnel'
-    case 'degraded': return 'Performances dégradées'
+    case 'operational': return 'Operational'
+    case 'degraded': return 'Degraded performance'
     case 'partial': return 'Panne partielle'
     case 'major': return 'Panne majeure'
     case 'maintenance': return 'Maintenance'
@@ -218,14 +218,14 @@ export default function StatusPageAdmin() {
           <div>
             <h2 className="text-lg font-semibold">Configuration de la page de statut publique</h2>
             <p className="text-sm text-muted-foreground">
-              Personnalisez et gérez votre page de statut accessible à vos utilisateurs
+              Customize and manage the status page available to your users
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
               <a href={`https://${config.customDomain || config.subdomain + '.slamonitor.com'}`} target="_blank">
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Voir la page
+                View page
               </a>
             </Button>
             <Button>
@@ -240,7 +240,7 @@ export default function StatusPageAdmin() {
           <TabsList>
             <TabsTrigger value="preview" className="gap-2">
               <Eye className="h-4 w-4" />
-              Aperçu
+              Preview
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
@@ -259,7 +259,7 @@ export default function StatusPageAdmin() {
                 {previewLoading ? (
                   <div className="flex items-center justify-center p-12">
                     <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-muted-foreground">Chargement...</span>
+                    <span className="ml-2 text-muted-foreground">Loading...</span>
                   </div>
                 ) : (
                 <div className="border rounded-lg overflow-hidden">
@@ -279,10 +279,10 @@ export default function StatusPageAdmin() {
                     <div className="flex items-center justify-center gap-3">
                       {getStatusIcon(overallStatus)}
                       <span className="font-semibold text-lg">
-                        {overallStatus === 'operational' ? 'Tous les systèmes sont opérationnels' :
-                         overallStatus === 'degraded' ? 'Certains systèmes rencontrent des problèmes' :
-                         overallStatus === 'maintenance' ? 'Maintenance en cours' :
-                         'Des problèmes affectent nos services'}
+                        {overallStatus === 'operational' ? 'All systems are operational' :
+                         overallStatus === 'degraded' ? 'Some systems are experiencing issues' :
+                         overallStatus === 'maintenance' ? 'Maintenance in progress' :
+                         'Issues are affecting our services'}
                       </span>
                     </div>
                   </div>
@@ -403,7 +403,7 @@ export default function StatusPageAdmin() {
 
                     {displayGroups.length === 0 && ungroupedMonitors.length === 0 && !previewLoading && (
                       <div className="text-center py-8 text-muted-foreground">
-                        Aucun service configuré pour la page de statut.
+                        No services configured for the status page.
                       </div>
                     )}
                   </div>
@@ -411,11 +411,11 @@ export default function StatusPageAdmin() {
                   {/* Uptime History */}
                   {config.showUptime && (
                     <div className="p-6 border-t">
-                      <h3 className="font-semibold mb-4">Historique de disponibilité (90 jours)</h3>
+                      <h3 className="font-semibold mb-4">Uptime History (90 days)</h3>
                       <UptimeBar data={uptimeData} />
                       <div className="flex justify-between text-xs text-muted-foreground mt-2">
                         <span>Il y a 90 jours</span>
-                        <span>Aujourd'hui</span>
+                        <span>Today</span>
                       </div>
                     </div>
                   )}
@@ -445,7 +445,7 @@ export default function StatusPageAdmin() {
                             </div>
                             {incident.resolvedAt && (
                               <p className="text-sm text-muted-foreground mt-2 pl-6">
-                                Résolu le {formatDate(incident.resolvedAt)}
+                                Resolved on {formatDate(incident.resolvedAt)}
                               </p>
                             )}
                           </div>
@@ -476,21 +476,21 @@ export default function StatusPageAdmin() {
           <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Paramètres généraux</CardTitle>
-                <CardDescription>Configuration de base de votre page de statut</CardDescription>
+                <CardTitle>General Settings</CardTitle>
+                <CardDescription>Basic configuration for your status page</CardDescription>
               </CardHeader>
               {configLoading ? (
                 <CardContent>
                   <div className="flex items-center justify-center p-8">
                     <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-muted-foreground">Chargement...</span>
+                    <span className="ml-2 text-muted-foreground">Loading...</span>
                   </div>
                 </CardContent>
               ) : (
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
-                    <Label className="text-base">Page de statut activée</Label>
+                    <Label className="text-base">Status page enabled</Label>
                     <p className="text-sm text-muted-foreground">
                       Rendre la page accessible publiquement
                     </p>
@@ -520,7 +520,7 @@ export default function StatusPageAdmin() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Domaine personnalisé (optionnel)</Label>
+                    <Label>Custom domain (optional)</Label>
                     <Input
                       placeholder="status.votredomaine.com"
                       value={config.customDomain || ''}
@@ -535,7 +535,7 @@ export default function StatusPageAdmin() {
                 <Separator />
 
                 <div className="space-y-4">
-                  <h4 className="font-medium">Éléments affichés</h4>
+                  <h4 className="font-medium">Displayed Elements</h4>
                   
                   <div className="flex items-center justify-between">
                     <Label>Afficher l'uptime</Label>
@@ -546,7 +546,7 @@ export default function StatusPageAdmin() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Label>Afficher le temps de réponse</Label>
+                    <Label>Show response time</Label>
                     <Switch
                       checked={config.showResponseTime}
                       onCheckedChange={(checked) => setConfig({ ...config, showResponseTime: checked })}
@@ -575,7 +575,7 @@ export default function StatusPageAdmin() {
                 <div className="flex justify-end">
                   <Button onClick={saveConfig} disabled={saving}>
                     {saving && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
-                    Enregistrer
+                    Save
                   </Button>
                 </div>
               </CardContent>
@@ -588,7 +588,7 @@ export default function StatusPageAdmin() {
             <Card>
               <CardHeader>
                 <CardTitle>Personnalisation</CardTitle>
-                <CardDescription>Adaptez l'apparence de votre page de statut</CardDescription>
+                <CardDescription>Customize your status page appearance</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
@@ -600,7 +600,7 @@ export default function StatusPageAdmin() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Thème</Label>
+                    <Label>Theme</Label>
                     <Select
                       value={config.theme}
                       onValueChange={(v) => setConfig({ ...config, theme: v as any })}
@@ -656,7 +656,7 @@ export default function StatusPageAdmin() {
                 <div className="flex justify-end">
                   <Button onClick={saveConfig} disabled={saving}>
                     {saving && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
-                    Enregistrer
+                    Save
                   </Button>
                 </div>
               </CardContent>

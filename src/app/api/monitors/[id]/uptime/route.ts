@@ -8,7 +8,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
 
   const monitor = db.prepare('SELECT id FROM monitors WHERE id = ?').get(id);
-  if (!monitor) return NextResponse.json({ error: 'Monitor non trouvé' }, { status: 404 });
+  if (!monitor) return NextResponse.json({ error: 'Monitor not found' }, { status: 404 });
 
   const period = request.nextUrl.searchParams.get('period') || '30d';
   const periodMap: Record<string, number> = {

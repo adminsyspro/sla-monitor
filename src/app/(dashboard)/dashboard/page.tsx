@@ -59,15 +59,15 @@ import { formatDate, cn } from '@/lib/utils'
 const defaultWidgets: Widget[] = [
   { id: 'w1', type: 'kpi-mttr', title: 'MTTR', size: 'small', enabled: true, order: 1 },
   { id: 'w2', type: 'kpi-mttd', title: 'MTTD', size: 'small', enabled: true, order: 2 },
-  { id: 'w3', type: 'incidents-active', title: 'Incidents actifs', size: 'small', enabled: true, order: 3 },
-  { id: 'w4', type: 'error-budget', title: 'Budget d\'erreur', size: 'small', enabled: true, order: 4 },
-  { id: 'w5', type: 'response-time', title: 'Temps de réponse', size: 'wide', enabled: true, order: 5 },
-  { id: 'w6', type: 'uptime-gauge', title: 'Uptime Global', size: 'small', enabled: true, order: 6 },
-  { id: 'w7', type: 'service-status', title: 'Disponibilité services', size: 'medium', enabled: true, order: 7 },
-  { id: 'w8', type: 'incident-heatmap', title: 'Distribution incidents', size: 'wide', enabled: true, order: 8 },
-  { id: 'w9', type: 'top-issues', title: 'Services à surveiller', size: 'medium', enabled: true, order: 9 },
-  { id: 'w10', type: 'recent-activity', title: 'Activité récente', size: 'wide', enabled: true, order: 10 },
-  { id: 'w11', type: 'sla-progress', title: 'Objectifs SLA', size: 'medium', enabled: true, order: 11 },
+  { id: 'w3', type: 'incidents-active', title: 'Active Incidents', size: 'small', enabled: true, order: 3 },
+  { id: 'w4', type: 'error-budget', title: 'Error Budget', size: 'small', enabled: true, order: 4 },
+  { id: 'w5', type: 'response-time', title: 'Response Time', size: 'wide', enabled: true, order: 5 },
+  { id: 'w6', type: 'uptime-gauge', title: 'Global Uptime', size: 'small', enabled: true, order: 6 },
+  { id: 'w7', type: 'service-status', title: 'Service Uptime', size: 'medium', enabled: true, order: 7 },
+  { id: 'w8', type: 'incident-heatmap', title: 'Incident Distribution', size: 'wide', enabled: true, order: 8 },
+  { id: 'w9', type: 'top-issues', title: 'Services to Watch', size: 'medium', enabled: true, order: 9 },
+  { id: 'w10', type: 'recent-activity', title: 'Recent Activity', size: 'wide', enabled: true, order: 10 },
+  { id: 'w11', type: 'sla-progress', title: 'SLA Targets', size: 'medium', enabled: true, order: 11 },
   { id: 'w12', type: 'maintenance-scheduled', title: 'Maintenances', size: 'small', enabled: true, order: 12 },
 ]
 
@@ -91,7 +91,7 @@ function KPIWidget({ type, value, label, trend, icon: Icon, color }: {
             trend.positive ? 'text-green-500' : 'text-red-500'
           )}>
             <TrendingUp className={cn('h-3 w-3', !trend.positive && 'rotate-180')} />
-            <span>{trend.value}% vs mois dernier</span>
+            <span>{trend.value}% vs last month</span>
           </div>
         )}
       </div>
@@ -109,9 +109,9 @@ function IncidentsWidget({ count }: { count: number }) {
         <p className={cn('text-3xl font-bold', count > 0 ? 'text-yellow-500' : 'text-green-500')}>
           {count}
         </p>
-        <p className="text-xs text-muted-foreground">Incidents en cours</p>
+        <p className="text-xs text-muted-foreground">Active incidents</p>
         {count > 0 && (
-          <Badge variant="destructive" className="text-xs">Action requise</Badge>
+          <Badge variant="destructive" className="text-xs">Action required</Badge>
         )}
       </div>
       <div className={cn('p-2 rounded-lg', count > 0 ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500')}>
@@ -136,7 +136,7 @@ function ErrorBudgetWidget({
   return (
     <div className="space-y-3 h-full flex flex-col justify-center">
       <div className="flex items-center justify-between">
-        <span className="text-sm">Budget d'erreur</span>
+        <span className="text-sm">Error budget</span>
         <span className={cn('font-bold', isLow ? 'text-yellow-500' : 'text-green-500')}>
           {remaining}%
         </span>
@@ -147,7 +147,7 @@ function ErrorBudgetWidget({
         indicatorClassName={isLow ? 'bg-yellow-500' : 'bg-green-500'}
       />
       <p className="text-xs text-muted-foreground">
-        {usedMinutes.toFixed(1)}min utilisées sur {totalMinutes.toFixed(0)}min
+        {usedMinutes.toFixed(1)}min used of {totalMinutes.toFixed(0)}min
       </p>
     </div>
   )
@@ -159,7 +159,7 @@ function SLAProgressWidget({ uptime, target }: { uptime: number; target: number 
     <div className="space-y-4">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm">Uptime actuel</span>
+          <span className="text-sm">Current uptime</span>
           <span className={cn('font-bold', isMet ? 'text-green-500' : 'text-red-500')}>
             {uptime}%
           </span>
@@ -170,12 +170,12 @@ function SLAProgressWidget({ uptime, target }: { uptime: number; target: number 
           indicatorClassName={isMet ? 'bg-green-500' : 'bg-red-500'}
         />
         <p className="text-xs text-muted-foreground">
-          Objectif: {target}%
+          Target: {target}%
         </p>
       </div>
       <Separator />
       <p className="text-xs text-muted-foreground text-center">
-        Aucun historique mensuel pour l'instant
+        No monthly history yet
       </p>
     </div>
   )
@@ -342,9 +342,9 @@ export default function DashboardPage() {
             )}>
               {overallUptime}%
             </p>
-            <p className="text-sm text-muted-foreground mt-1">Uptime global</p>
+            <p className="text-sm text-muted-foreground mt-1">Global uptime</p>
             <Badge variant={overallUptime >= targetUptime ? 'operational' : 'destructive'} className="mt-2">
-              {overallUptime >= targetUptime ? 'SLA respecté' : 'SLA non respecté'}
+              {overallUptime >= targetUptime ? 'SLA met' : 'SLA not met'}
             </Badge>
           </div>
         )
@@ -390,12 +390,12 @@ export default function DashboardPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4 text-blue-500" />
-              <span>Prochaine maintenance</span>
+              <span>Next maintenance</span>
             </div>
             {nextMaintenance === undefined ? (
-              <p className="text-xs text-muted-foreground">Chargement…</p>
+              <p className="text-xs text-muted-foreground">Loading...</p>
             ) : nextMaintenance === null ? (
-              <p className="text-xs text-muted-foreground">Aucune maintenance planifiée</p>
+              <p className="text-xs text-muted-foreground">No scheduled maintenance</p>
             ) : (
               <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                 <p className="font-medium text-sm">{nextMaintenance.title}</p>
@@ -407,7 +407,7 @@ export default function DashboardPage() {
           </div>
         )
       default:
-        return <p className="text-muted-foreground">Widget non configuré</p>
+        return <p className="text-muted-foreground">Widget not configured</p>
     }
   }
 
@@ -425,17 +425,17 @@ export default function DashboardPage() {
               {activeIncidents > 0 ? (
                 <>
                   <AlertTriangle className="h-3 w-3" />
-                  {activeIncidents} incident{activeIncidents > 1 ? 's' : ''} actif{activeIncidents > 1 ? 's' : ''}
+                  {activeIncidents} active incident{activeIncidents > 1 ? 's' : ''}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="h-3 w-3" />
-                  Tous systèmes opérationnels
+                  All systems operational
                 </>
               )}
             </Badge>
             <span className="text-sm text-muted-foreground">
-              Dernière mise à jour: {formatDate(new Date().toISOString())}
+              Last updated: {formatDate(new Date().toISOString())}
             </span>
           </div>
           
@@ -454,13 +454,13 @@ export default function DashboardPage() {
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-primary" />
-                <span className="font-medium">Mode édition activé</span>
+                <span className="font-medium">Edit mode enabled</span>
                 <span className="text-sm text-muted-foreground">
-                  — Glissez les widgets pour les réorganiser
+                  Drag widgets to reorganize them
                 </span>
               </div>
               <Button size="sm" onClick={() => setIsEditMode(false)}>
-                Terminer
+                Done
               </Button>
             </CardContent>
           </Card>
@@ -501,12 +501,12 @@ export default function DashboardPage() {
         {enabledWidgets.length === 0 && (
           <Card className="p-12 text-center">
             <Activity className="h-12 w-12 mx-auto text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-semibold">Aucun widget actif</h3>
+            <h3 className="mt-4 text-lg font-semibold">No active widgets</h3>
             <p className="mt-2 text-muted-foreground">
-              Ajoutez des widgets pour personnaliser votre dashboard
+              Add widgets to customize your dashboard
             </p>
             <Button className="mt-4" onClick={() => setIsAddWidgetOpen(true)}>
-              Ajouter un widget
+              Add a widget
             </Button>
           </Card>
         )}

@@ -46,7 +46,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-primary" />
-            <span className="text-muted-foreground">Moyen:</span>
+            <span className="text-muted-foreground">Average:</span>
             <span className="font-medium">{payload[0]?.value ?? '—'}ms</span>
           </div>
           <div className="flex items-center gap-2">
@@ -98,10 +98,10 @@ export function ResponseTimeChart({ className }: ResponseTimeChartProps) {
     <Card className={cn('', className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div className="space-y-1">
-          <CardTitle className="text-base font-medium">Temps de réponse</CardTitle>
+          <CardTitle className="text-base font-medium">Response Time</CardTitle>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>
-              Moy: <span className="font-medium text-foreground">{stats.avg ? `${stats.avg}ms` : '—'}</span>
+              Avg: <span className="font-medium text-foreground">{stats.avg ? `${stats.avg}ms` : '—'}</span>
             </span>
             <span>
               Min: <span className="font-medium text-green-500">{stats.min ? `${stats.min}ms` : '—'}</span>
@@ -116,11 +116,11 @@ export function ResponseTimeChart({ className }: ResponseTimeChartProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1h">1 heure</SelectItem>
-            <SelectItem value="6h">6 heures</SelectItem>
-            <SelectItem value="24h">24 heures</SelectItem>
-            <SelectItem value="7d">7 jours</SelectItem>
-            <SelectItem value="30d">30 jours</SelectItem>
+            <SelectItem value="1h">1 hour</SelectItem>
+            <SelectItem value="6h">6 hours</SelectItem>
+            <SelectItem value="24h">24 hours</SelectItem>
+            <SelectItem value="7d">7 days</SelectItem>
+            <SelectItem value="30d">30 days</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
@@ -128,11 +128,11 @@ export function ResponseTimeChart({ className }: ResponseTimeChartProps) {
         <div className="h-64">
           {loading ? (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              Chargement…
+              Loading...
             </div>
           ) : !hasData ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground text-center">Aucune donnée pour la période</p>
+              <p className="text-muted-foreground text-center">No data for this period</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -199,7 +199,7 @@ export function ResponseTimeChart({ className }: ResponseTimeChartProps) {
         <div className="flex items-center justify-center gap-6 mt-4 text-xs">
           <div className="flex items-center gap-2">
             <div className="h-2 w-4 rounded bg-primary" />
-            <span className="text-muted-foreground">Temps moyen</span>
+            <span className="text-muted-foreground">Average time</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-2 w-4 rounded bg-yellow-500" />

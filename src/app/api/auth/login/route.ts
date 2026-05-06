@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     if (!username || !password) {
       return NextResponse.json(
-        { error: "Nom d'utilisateur et mot de passe requis" },
+        { error: 'Username and password are required' },
         { status: 400 }
       );
     }
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       if (existingRow) {
         const ldapOk = await tryLDAPAuth(db, username, password);
         if (!ldapOk) {
-          return NextResponse.json({ error: "Nom d'utilisateur ou mot de passe invalide" }, { status: 401 });
+          return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
         }
         if (!existingRow.active) {
           return NextResponse.json({ error: "Votre compte est en attente d'approbation par un administrateur." }, { status: 403 });
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       } else {
         const provisioned = await tryLDAPAuthAndProvision(db, username, password);
         if (provisioned) {
-          return NextResponse.json({ error: "Votre compte a été créé et est en attente d'approbation par un administrateur." }, { status: 403 });
+          return NextResponse.json({ error: 'Your account has been created and is waiting for administrator approval.' }, { status: 403 });
         }
       }
     } else {
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
-      return NextResponse.json({ error: "Nom d'utilisateur ou mot de passe invalide" }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }
 
     const userRow = db.prepare('SELECT avatar FROM users WHERE id = ?').get(user.id) as { avatar: string | null } | undefined;
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: "Erreur d'authentification" }, { status: 500 });
+    return NextResponse.json({ error: 'Authentication error' }, { status: 500 });
   }
 }
 

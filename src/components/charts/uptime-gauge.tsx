@@ -15,7 +15,7 @@ interface UptimeGaugeProps {
 export function UptimeGauge({
   uptime,
   target,
-  title = 'Uptime Global',
+  title = 'Global Uptime',
   className,
 }: UptimeGaugeProps) {
   const isMet = uptime >= target
@@ -62,7 +62,7 @@ export function UptimeGauge({
               {uptime.toFixed(2)}%
             </span>
             <span className="text-xs text-muted-foreground">
-              Objectif: {target}%
+              Target: {target}%
             </span>
           </div>
         </div>
@@ -75,7 +75,7 @@ export function UptimeGauge({
                 : 'bg-red-500/10 text-red-500'
             )}
           >
-            {isMet ? '✓ SLA respecté' : '✗ SLA non respecté'}
+            {isMet ? '✓ SLA met' : '✗ SLA not met'}
           </div>
         </div>
       </CardContent>
@@ -97,7 +97,7 @@ export function RegionalUptime({ regions, className }: RegionalUptimeProps) {
   return (
     <Card className={cn('', className)}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Uptime par région</CardTitle>
+        <CardTitle className="text-base font-medium">Uptime by Region</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

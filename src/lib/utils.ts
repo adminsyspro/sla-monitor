@@ -20,7 +20,7 @@ export function formatDuration(ms: number): string {
 
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString('fr-FR', {
+  return d.toLocaleDateString('en-US', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -49,16 +49,16 @@ export function getStatusColor(status: string): string {
 export function getStatusLabel(status: string): string {
   switch (status) {
     case 'operational':
-      return 'Opérationnel'
+      return 'Operational'
     case 'degraded':
-      return 'Dégradé'
+      return 'Degraded'
     case 'partial':
-      return 'Panne partielle'
+      return 'Partial outage'
     case 'major':
-      return 'Panne majeure'
+      return 'Major outage'
     case 'maintenance':
       return 'Maintenance'
     default:
-      return 'Inconnu'
+      return 'Unknown'
   }
 }

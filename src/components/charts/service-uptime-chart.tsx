@@ -53,18 +53,18 @@ const CustomTooltip = ({ active, payload }: any) => {
             </span>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-muted-foreground">Objectif:</span>
+            <span className="text-muted-foreground">Target:</span>
             <span className="font-medium">{data.target}%</span>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-muted-foreground">Statut:</span>
+            <span className="text-muted-foreground">Status:</span>
             <span
               className={cn(
                 'font-medium',
                 isMet ? 'text-green-500' : 'text-red-500'
               )}
             >
-              {isMet ? '✓ Conforme' : '✗ Non conforme'}
+              {isMet ? '✓ Compliant' : '✗ Non-compliant'}
             </span>
           </div>
         </div>
@@ -101,11 +101,11 @@ export function ServiceUptimeChart({ className }: ServiceUptimeChartProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-medium">
-            Disponibilité par service
+            Uptime by Service
           </CardTitle>
           {!loading && services.length > 0 && (
             <div className="text-sm">
-              <span className="text-muted-foreground">Conformes: </span>
+              <span className="text-muted-foreground">Compliant: </span>
               <span
                 className={cn(
                   'font-medium',
@@ -124,11 +124,11 @@ export function ServiceUptimeChart({ className }: ServiceUptimeChartProps) {
         <div className="h-64">
           {loading ? (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              Chargement…
+              Loading...
             </div>
           ) : services.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground text-center">Aucun service</p>
+              <p className="text-muted-foreground text-center">No services</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">

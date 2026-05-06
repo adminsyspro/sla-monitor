@@ -52,17 +52,17 @@ function getStatusVariant(status: MonitorStatus) {
 function getStatusLabel(status: MonitorStatus): string {
   switch (status) {
     case 'operational':
-      return 'Opérationnel'
+      return 'Operational'
     case 'degraded':
-      return 'Dégradé'
+      return 'Degraded'
     case 'partial':
-      return 'Panne partielle'
+      return 'Partial outage'
     case 'major':
-      return 'Panne majeure'
+      return 'Major outage'
     case 'maintenance':
       return 'Maintenance'
     default:
-      return 'Inconnu'
+      return 'Unknown'
   }
 }
 
@@ -174,9 +174,9 @@ export function MonitorCard({ monitor, onClick, compact = false }: MonitorCardPr
         {/* Uptime Bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">90 derniers jours</span>
+            <span className="text-muted-foreground">Last 90 days</span>
             <span className="font-medium">
-              {avgUptime !== null ? `${avgUptime.toFixed(3)}% uptime` : 'Aucune donnée'}
+              {avgUptime !== null ? `${avgUptime.toFixed(3)}% uptime` : 'No data'}
             </span>
           </div>
           <UptimeBar data={uptimeData} />
@@ -194,14 +194,14 @@ export function MonitorCard({ monitor, onClick, compact = false }: MonitorCardPr
           <div className="space-y-1">
             <div className="flex items-center gap-1 text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
-              <span className="text-xs">Intervalle</span>
+              <span className="text-xs">Interval</span>
             </div>
             <p className="text-sm font-medium">{monitor.interval}s</p>
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-1 text-muted-foreground">
               <Zap className="h-3.5 w-3.5" />
-              <span className="text-xs">Réponse</span>
+              <span className="text-xs">Response</span>
             </div>
             <p className="text-sm font-medium">
               {avgResponseTime !== null && avgResponseTime > 0 ? `${avgResponseTime}ms` : '—'}

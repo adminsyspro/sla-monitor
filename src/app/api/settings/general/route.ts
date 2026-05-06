@@ -6,7 +6,7 @@ const GENERAL_KEYS = ['general_site_name', 'general_contact_email', 'general_tim
 export async function GET(request: NextRequest) {
   const role = request.headers.get('x-user-role');
   if (role !== 'Administrator') {
-    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const db = getDb();
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const role = request.headers.get('x-user-role');
   if (role !== 'Administrator') {
-    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const body = await request.json();

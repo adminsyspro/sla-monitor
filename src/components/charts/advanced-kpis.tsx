@@ -119,7 +119,7 @@ export function AdvancedKPIs() {
           title="MTTR"
           value="12.5 min"
           subtitle="Mean Time To Repair"
-          trend={{ value: 15, label: 'vs mois dernier', isPositive: true }}
+          trend={{ value: 15, label: 'vs last month', isPositive: true }}
           icon={Timer}
           iconColor="text-blue-500"
           status="success"
@@ -128,16 +128,16 @@ export function AdvancedKPIs() {
           title="MTTD"
           value="2.3 min"
           subtitle="Mean Time To Detect"
-          trend={{ value: 8, label: 'vs mois dernier', isPositive: true }}
+          trend={{ value: 8, label: 'vs last month', isPositive: true }}
           icon={Eye}
           iconColor="text-purple-500"
           status="success"
         />
         <KPICard
-          title="Taux de résolution"
+          title="Resolution Rate"
           value="94.2%"
-          subtitle="Incidents résolus dans le SLA"
-          trend={{ value: 3, label: 'vs mois dernier', isPositive: true }}
+          subtitle="Incidents resolved within SLA"
+          trend={{ value: 3, label: 'vs last month', isPositive: true }}
           icon={CheckCircle}
           iconColor="text-green-500"
           status="success"
@@ -145,7 +145,7 @@ export function AdvancedKPIs() {
         <KPICard
           title="Checks / minute"
           value="847"
-          subtitle="Vérifications actives"
+          subtitle="Active checks"
           icon={RefreshCw}
           iconColor="text-orange-500"
           status="neutral"
@@ -157,7 +157,7 @@ export function AdvancedKPIs() {
         <KPICard
           title="Apdex Score"
           value="0.94"
-          subtitle="Performance applicative"
+          subtitle="Application performance"
           icon={Gauge}
           iconColor="text-cyan-500"
           status="success"
@@ -166,16 +166,16 @@ export function AdvancedKPIs() {
         <KPICard
           title="Error Budget"
           value="87%"
-          subtitle="Budget restant ce mois"
+          subtitle="Budget remaining this month"
           icon={Shield}
           iconColor="text-emerald-500"
           status="success"
           progress={{ value: 87, max: 100, color: 'bg-emerald-500' }}
         />
         <KPICard
-          title="Incidents ouverts"
+          title="Open Incidents"
           value="2"
-          subtitle="1 critique, 1 mineur"
+          subtitle="1 critical, 1 minor"
           icon={AlertTriangle}
           iconColor="text-yellow-500"
           status="warning"
@@ -184,7 +184,7 @@ export function AdvancedKPIs() {
           title="P99 Latency"
           value="245ms"
           subtitle="99th percentile"
-          trend={{ value: 12, label: 'vs hier', isPositive: false }}
+          trend={{ value: 12, label: 'vs yesterday', isPositive: false }}
           icon={Zap}
           iconColor="text-red-500"
           status="warning"
@@ -233,21 +233,21 @@ export function StatusSummary() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Résumé du statut</CardTitle>
+        <CardTitle className="text-base font-medium">Status Summary</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 rounded-lg bg-green-500/10">
             <div className="text-2xl font-bold text-green-500">42</div>
-            <div className="text-xs text-muted-foreground">Opérationnels</div>
+            <div className="text-xs text-muted-foreground">Operational</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-yellow-500/10">
             <div className="text-2xl font-bold text-yellow-500">3</div>
-            <div className="text-xs text-muted-foreground">Dégradés</div>
+            <div className="text-xs text-muted-foreground">Degraded</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-red-500/10">
             <div className="text-2xl font-bold text-red-500">1</div>
-            <div className="text-xs text-muted-foreground">En panne</div>
+            <div className="text-xs text-muted-foreground">Down</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-blue-500/10">
             <div className="text-2xl font-bold text-blue-500">2</div>

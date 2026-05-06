@@ -42,17 +42,17 @@ function getStatusColor(status: MonitorStatus): string {
 function getStatusLabel(status: MonitorStatus): string {
   switch (status) {
     case 'operational':
-      return 'Opérationnel'
+      return 'Operational'
     case 'degraded':
-      return 'Dégradé'
+      return 'Degraded'
     case 'partial':
-      return 'Panne partielle'
+      return 'Partial outage'
     case 'major':
-      return 'Panne majeure'
+      return 'Major outage'
     case 'maintenance':
       return 'Maintenance'
     default:
-      return 'Aucune donnée'
+      return 'No data'
   }
 }
 
@@ -96,7 +96,7 @@ export function UptimeBar({ data, className }: UptimeBarProps) {
             <TooltipContent side="top" className="text-xs">
               <div className="space-y-1">
                 <p className="font-medium">
-                  {new Date(day.date).toLocaleDateString('fr-FR', {
+                  {new Date(day.date).toLocaleDateString('en-US', {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',
@@ -117,4 +117,3 @@ export function UptimeBar({ data, className }: UptimeBarProps) {
     </TooltipProvider>
   )
 }
-

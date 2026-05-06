@@ -19,14 +19,14 @@ interface UserRow {
 export async function GET(request: NextRequest) {
   const userId = request.headers.get('x-user-id');
   if (!userId) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const db = getDb();
   const row = db.prepare('SELECT id, username, email, firstname, lastname, role, active, auth_type, avatar, created_at, updated_at FROM users WHERE id = ?').get(userId) as UserRow | undefined;
 
   if (!row) {
-    return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
   return NextResponse.json({
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const userId = request.headers.get('x-user-id');
   if (!userId) {
-    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await request.json();
@@ -56,7 +56,7 @@ export async function PUT(request: NextRequest) {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as (UserRow & { password_hash: string }) | undefined;
   if (!existing) {
-    return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
   const fields: string[] = [];

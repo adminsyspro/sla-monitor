@@ -104,7 +104,7 @@ function getStatusConfig(status: SLATargetWithMetrics['status']) {
     case 'healthy':
       return { label: 'Conforme', color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/50' }
     case 'warning':
-      return { label: 'À risque', color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/50' }
+      return { label: 'At risk', color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/50' }
     case 'critical':
       return { label: 'Non conforme', color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/50' }
   }
@@ -279,7 +279,7 @@ export default function SLATargetsPage() {
 
   return (
     <TooltipProvider>
-      <Header title="Objectifs SLA" />
+      <Header title="SLA Targets" />
       <main className="p-6 space-y-6">
         {/* Stats Overview */}
         <div className="grid gap-4 md:grid-cols-4">
@@ -287,7 +287,7 @@ export default function SLATargetsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total objectifs</p>
+                  <p className="text-sm text-muted-foreground">Total targets</p>
                   <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
                 <Target className="h-8 w-8 text-primary" />
@@ -298,7 +298,7 @@ export default function SLATargetsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Conformes</p>
+                  <p className="text-sm text-muted-foreground">Compliant</p>
                   <p className="text-2xl font-bold text-green-500">{stats.healthy}</p>
                 </div>
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
@@ -309,7 +309,7 @@ export default function SLATargetsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">À risque</p>
+                  <p className="text-sm text-muted-foreground">At risk</p>
                   <p className="text-2xl font-bold text-yellow-500">{stats.warning}</p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-yellow-500" />
@@ -320,7 +320,7 @@ export default function SLATargetsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Non conformes</p>
+                  <p className="text-sm text-muted-foreground">Non-compliant</p>
                   <p className="text-2xl font-bold text-red-500">{stats.critical}</p>
                 </div>
                 <X className="h-8 w-8 text-red-500" />
@@ -332,29 +332,29 @@ export default function SLATargetsPage() {
         {/* Actions */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Objectifs configurés</h2>
+            <h2 className="text-lg font-semibold">Configured Targets</h2>
             <p className="text-sm text-muted-foreground">
-              Gérez vos engagements de niveau de service
+              Manage your service level commitments
             </p>
           </div>
           <Button onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Nouvel objectif
+            New target
           </Button>
         </div>
 
         {/* SLA Targets Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="text-muted-foreground">Chargement des objectifs SLA...</div>
+            <div className="text-muted-foreground">Loading SLA targets...</div>
           </div>
         ) : slaTargets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Target className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Aucun objectif SLA configuré</p>
+            <p className="text-muted-foreground">No SLA targets configured</p>
             <Button className="mt-4" onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Créer un objectif
+              Create a target
             </Button>
           </div>
         ) : (
@@ -397,7 +397,7 @@ export default function SLATargetsPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => setSelectedTarget(target)}>
                             <Edit className="h-4 w-4 mr-2" />
-                            Modifier
+                            Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Settings className="h-4 w-4 mr-2" />
@@ -406,7 +406,7 @@ export default function SLATargetsPage() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTarget(target.id)}>
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Supprimer
+                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -453,7 +453,7 @@ export default function SLATargetsPage() {
                               <Info className="h-3 w-3 text-muted-foreground" />
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Temps d'indisponibilité autorisé</p>
+                              <p>Allowed downtime</p>
                               <p>pour respecter le SLA</p>
                             </TooltipContent>
                           </Tooltip>
@@ -462,7 +462,7 @@ export default function SLATargetsPage() {
                           'font-bold',
                           isOverBudget ? 'text-red-500' : target.errorBudgetRemaining < 20 ? 'text-yellow-500' : 'text-green-500'
                         )}>
-                          {isOverBudget ? 'Dépassé' : `${target.errorBudgetRemaining.toFixed(0)}%`}
+                          {isOverBudget ? 'Exceeded' : `${target.errorBudgetRemaining.toFixed(0)}%`}
                         </span>
                       </div>
                       <Progress
@@ -473,8 +473,8 @@ export default function SLATargetsPage() {
                         }
                       />
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Utilisé: {formatMinutes(target.downtimeMinutes)}</span>
-                        <span>Autorisé: {formatMinutes(target.allowedDowntimeMinutes)}</span>
+                        <span>Used: {formatMinutes(target.downtimeMinutes)}</span>
+                        <span>Allowed: {formatMinutes(target.allowedDowntimeMinutes)}</span>
                       </div>
                     </div>
                   </div>
@@ -489,14 +489,14 @@ export default function SLATargetsPage() {
                     </div>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="h-4 w-4" />
-                      {target.excludeMaintenanceWindows ? 'Maintenance exclue' : 'Maintenance incluse'}
+                      {target.excludeMaintenanceWindows ? 'Maintenance excluded' : 'Maintenance included'}
                     </div>
                   </div>
 
                   {/* Monitors */}
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      {target.monitorIds.length} service{target.monitorIds.length > 1 ? 's' : ''} surveillé{target.monitorIds.length > 1 ? 's' : ''}
+                      {target.monitorIds.length} monitored service{target.monitorIds.length > 1 ? 's' : ''}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {target.monitorIds.slice(0, 4).map((id) => (
@@ -518,24 +518,24 @@ export default function SLATargetsPage() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Créer un objectif SLA</DialogTitle>
+              <DialogTitle>Create an SLA target</DialogTitle>
               <DialogDescription>
-                Définissez un nouvel engagement de niveau de service pour vos monitors.
+                Define a new service level commitment for your monitors.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label>Nom de l'objectif</Label>
+                <Label>Target name</Label>
                 <Input
-                  placeholder="Ex: SLA Production Critique"
+                  placeholder="Example: Critical Production SLA"
                   value={newTarget.name}
                   onChange={(e) => setNewTarget({ ...newTarget, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Description (optionnel)</Label>
+                <Label>Description (optional)</Label>
                 <Input
-                  placeholder="Description de cet objectif SLA"
+                  placeholder="Description of this SLA target"
                   value={newTarget.description}
                   onChange={(e) => setNewTarget({ ...newTarget, description: e.target.value })}
                 />
@@ -560,7 +560,7 @@ export default function SLATargetsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Période</Label>
+                  <Label>Period</Label>
                   <Select
                     value={newTarget.period}
                     onValueChange={(v) => setNewTarget({ ...newTarget, period: v as any })}
@@ -577,7 +577,7 @@ export default function SLATargetsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Services à inclure</Label>
+                <Label>Services to include</Label>
                 <Select
                   onValueChange={(v) => {
                     if (!newTarget.monitorIds.includes(v)) {
@@ -586,7 +586,7 @@ export default function SLATargetsPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner les monitors" />
+                    <SelectValue placeholder="Select monitors" />
                   </SelectTrigger>
                   <SelectContent>
                     {monitors.map((monitor) => (
@@ -610,9 +610,9 @@ export default function SLATargetsPage() {
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div className="space-y-0.5">
-                  <Label>Exclure les maintenances planifiées</Label>
+                  <Label>Exclude scheduled maintenance</Label>
                   <p className="text-xs text-muted-foreground">
-                    Les fenêtres de maintenance ne compteront pas comme downtime
+                    Maintenance windows will not count as downtime
                   </p>
                 </div>
                 <Switch
@@ -623,10 +623,10 @@ export default function SLATargetsPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Annuler
+                Cancel
               </Button>
               <Button onClick={handleCreateTarget} disabled={!newTarget.name.trim() || saving}>
-                {saving ? 'Création...' : "Créer l'objectif"}
+                {saving ? 'Creating...' : 'Create target'}
               </Button>
             </DialogFooter>
           </DialogContent>

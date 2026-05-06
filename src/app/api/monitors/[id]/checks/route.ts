@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
 
   const monitor = db.prepare('SELECT id FROM monitors WHERE id = ?').get(id);
-  if (!monitor) return NextResponse.json({ error: 'Monitor non trouvé' }, { status: 404 });
+  if (!monitor) return NextResponse.json({ error: 'Monitor not found' }, { status: 404 });
 
   const url = request.nextUrl;
   const period = url.searchParams.get('period') || '24h';

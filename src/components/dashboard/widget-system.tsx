@@ -78,18 +78,18 @@ export interface Widget {
 
 // Available widget templates
 export const widgetTemplates: Omit<Widget, 'id' | 'order'>[] = [
-  { type: 'uptime-gauge', title: 'Uptime Global', size: 'small', enabled: true },
-  { type: 'response-time', title: 'Temps de réponse', size: 'wide', enabled: true },
-  { type: 'incidents-active', title: 'Incidents actifs', size: 'small', enabled: true },
+  { type: 'uptime-gauge', title: 'Global Uptime', size: 'small', enabled: true },
+  { type: 'response-time', title: 'Response Time', size: 'wide', enabled: true },
+  { type: 'incidents-active', title: 'Active Incidents', size: 'small', enabled: true },
   { type: 'kpi-mttr', title: 'MTTR', size: 'small', enabled: true },
   { type: 'kpi-mttd', title: 'MTTD', size: 'small', enabled: true },
-  { type: 'error-budget', title: 'Budget d\'erreur', size: 'small', enabled: true },
-  { type: 'service-status', title: 'Statut des services', size: 'medium', enabled: true },
-  { type: 'recent-activity', title: 'Activité récente', size: 'tall', enabled: true },
-  { type: 'top-issues', title: 'Services à surveiller', size: 'medium', enabled: true },
-  { type: 'incident-heatmap', title: 'Distribution incidents', size: 'wide', enabled: true },
-  { type: 'monitors-overview', title: 'Aperçu monitors', size: 'large', enabled: true },
-  { type: 'sla-progress', title: 'Objectifs SLA', size: 'medium', enabled: true },
+  { type: 'error-budget', title: 'Error Budget', size: 'small', enabled: true },
+  { type: 'service-status', title: 'Service Status', size: 'medium', enabled: true },
+  { type: 'recent-activity', title: 'Recent Activity', size: 'tall', enabled: true },
+  { type: 'top-issues', title: 'Services to Watch', size: 'medium', enabled: true },
+  { type: 'incident-heatmap', title: 'Incident Distribution', size: 'wide', enabled: true },
+  { type: 'monitors-overview', title: 'Monitors Overview', size: 'large', enabled: true },
+  { type: 'sla-progress', title: 'SLA Targets', size: 'medium', enabled: true },
   { type: 'maintenance-scheduled', title: 'Maintenances', size: 'small', enabled: true },
 ]
 
@@ -176,30 +176,30 @@ export function WidgetWrapper({
             {onRefresh && (
               <DropdownMenuItem onClick={onRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Actualiser
+                Refresh
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onResize('small')}>
               <Minimize2 className="h-4 w-4 mr-2" />
-              Petit
+              Small
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onResize('medium')}>
               <LayoutGrid className="h-4 w-4 mr-2" />
-              Moyen
+              Medium
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onResize('wide')}>
               <Maximize2 className="h-4 w-4 mr-2 rotate-90" />
-              Large
+              Wide
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onResize('large')}>
               <Maximize2 className="h-4 w-4 mr-2" />
-              Grand
+              Large
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onRemove} className="text-destructive">
               <X className="h-4 w-4 mr-2" />
-              Retirer
+              Remove
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -229,9 +229,9 @@ export function AddWidgetDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un widget</DialogTitle>
+          <DialogTitle>Add a widget</DialogTitle>
           <DialogDescription>
-            Sélectionnez un widget à ajouter à votre dashboard
+            Select a widget to add to your dashboard
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-3 py-4 max-h-[400px] overflow-y-auto">
@@ -260,11 +260,11 @@ export function AddWidgetDialog({
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm">{template.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    Taille: {template.size}
+                    Size: {template.size}
                   </p>
                   {isAdded && (
                     <Badge variant="secondary" className="mt-1 text-xs">
-                      Déjà ajouté
+                      Already added
                     </Badge>
                   )}
                 </div>
@@ -274,7 +274,7 @@ export function AddWidgetDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Fermer
+            Close
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -301,9 +301,9 @@ export function WidgetSettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Configuration des widgets</DialogTitle>
+          <DialogTitle>Widget settings</DialogTitle>
           <DialogDescription>
-            Activez ou désactivez les widgets de votre dashboard
+            Enable or disable dashboard widgets
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-4 max-h-[400px] overflow-y-auto">
@@ -319,7 +319,7 @@ export function WidgetSettingsDialog({
                 <div>
                   <p className="font-medium text-sm">{widget.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    Taille: {widget.size}
+                    Size: {widget.size}
                   </p>
                 </div>
               </div>
@@ -332,9 +332,9 @@ export function WidgetSettingsDialog({
         </div>
         <DialogFooter className="flex justify-between">
           <Button variant="outline" onClick={onResetLayout}>
-            Réinitialiser
+            Reset
           </Button>
-          <Button onClick={() => onOpenChange(false)}>Fermer</Button>
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -373,7 +373,7 @@ export function DashboardControls({
         onClick={onToggleEditMode}
       >
         <LayoutGrid className="h-4 w-4 mr-2" />
-        {isEditMode ? 'Terminer' : 'Éditer'}
+        {isEditMode ? 'Done' : 'Edit'}
       </Button>
       {isEditMode && (
         <Button size="sm" onClick={onAddWidget}>

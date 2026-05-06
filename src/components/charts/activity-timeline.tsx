@@ -53,11 +53,11 @@ function formatRelativeTime(timestamp: string): string {
   const diffHours = Math.floor(diffMs / 3600000)
   const diffDays = Math.floor(diffMs / 86400000)
 
-  if (diffMins < 1) return 'À l\'instant'
-  if (diffMins < 60) return `Il y a ${diffMins} min`
-  if (diffHours < 24) return `Il y a ${diffHours}h`
-  if (diffDays < 7) return `Il y a ${diffDays}j`
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins} min ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
 }
 
 export interface ActivityTimelineProps {
@@ -74,9 +74,9 @@ export function ActivityTimeline({ className, limit = 6, activities }: ActivityT
     <Card className={cn('', className)}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-medium">Activité récente</CardTitle>
+          <CardTitle className="text-base font-medium">Recent Activity</CardTitle>
           <Button variant="ghost" size="sm" className="text-xs">
-            Voir tout
+            View all
           </Button>
         </div>
       </CardHeader>
@@ -84,7 +84,7 @@ export function ActivityTimeline({ className, limit = 6, activities }: ActivityT
         {displayedActivity.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <Activity className="h-8 w-8 text-muted-foreground/50 mb-2" />
-            <p className="text-sm text-muted-foreground">Aucune activité récente</p>
+            <p className="text-sm text-muted-foreground">No recent activity</p>
           </div>
         ) : (
           <div className="relative">

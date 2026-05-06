@@ -26,7 +26,7 @@ interface ApiResponse {
   cells: Cell[]
 }
 
-const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const hours = Array.from({ length: 24 }, (_, i) => i)
 
 function getColorIntensity(count: number): string {
@@ -69,17 +69,17 @@ export function IncidentHeatmap({ className }: IncidentHeatmapProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-medium">
-            Distribution des incidents
+            Incident Distribution
           </CardTitle>
           <div className="text-sm text-muted-foreground">
-            {loading ? '…' : `${totalIncidents} incidents (${weeks} semaines)`}
+            {loading ? '...' : `${totalIncidents} incidents (${weeks} weeks)`}
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
         {loading ? (
           <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
-            Chargement…
+            Loading...
           </div>
         ) : (
           <TooltipProvider delayDuration={0}>
@@ -132,14 +132,14 @@ export function IncidentHeatmap({ className }: IncidentHeatmapProps) {
 
               {/* Legend */}
               <div className="flex items-center justify-end gap-2 pt-3 text-xs text-muted-foreground">
-                <span>Moins</span>
+                <span>Less</span>
                 <div className="flex gap-[2px]">
                   <div className="w-3 h-3 rounded-sm bg-muted" />
                   <div className="w-3 h-3 rounded-sm bg-yellow-500/40" />
                   <div className="w-3 h-3 rounded-sm bg-orange-500/60" />
                   <div className="w-3 h-3 rounded-sm bg-red-500/80" />
                 </div>
-                <span>Plus</span>
+                <span>More</span>
               </div>
             </div>
           </TooltipProvider>

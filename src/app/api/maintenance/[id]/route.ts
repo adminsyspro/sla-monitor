@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   const db = getDb();
   const row = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow | undefined;
-  if (!row) return NextResponse.json({ error: 'Maintenance non trouvée' }, { status: 404 });
+  if (!row) return NextResponse.json({ error: 'Maintenance not found' }, { status: 404 });
   return NextResponse.json(toResponse(row));
 }
 
@@ -41,7 +41,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
 
   const existing = db.prepare('SELECT id FROM maintenance_windows WHERE id = ?').get(id);
-  if (!existing) return NextResponse.json({ error: 'Maintenance non trouvée' }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: 'Maintenance not found' }, { status: 404 });
 
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -80,7 +80,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
 
   const existing = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow | undefined;
-  if (!existing) return NextResponse.json({ error: 'Maintenance non trouvée' }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: 'Maintenance not found' }, { status: 404 });
 
   if (action === 'start') {
     db.prepare(

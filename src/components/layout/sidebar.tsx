@@ -44,7 +44,7 @@ interface NavGroup {
 
 const navigation: NavGroup[] = [
   {
-    title: 'Vue d\'ensemble',
+    title: 'Overview',
     items: [
       { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     ],
@@ -58,19 +58,19 @@ const navigation: NavGroup[] = [
     ],
   },
   {
-    title: 'SLA & Rapports',
+    title: 'SLA & Reports',
     items: [
-      { title: 'Objectifs SLA', href: '/sla-targets', icon: Target },
-      { title: 'Rapports', href: '/reports', icon: BarChart3 },
-      { title: 'Page de statut', href: '/status', icon: FileText },
+      { title: 'SLA Targets', href: '/sla-targets', icon: Target },
+      { title: 'Reports', href: '/reports', icon: BarChart3 },
+      { title: 'Status Page', href: '/status', icon: FileText },
     ],
   },
   {
     title: 'Administration',
     items: [
-      { title: 'Utilisateurs', href: '/users', icon: Users, requiredRole: ['Administrator'] },
-      { title: 'Sécurité', href: '/security', icon: Shield },
-      { title: 'Paramètres', href: '/settings', icon: Settings },
+      { title: 'Users', href: '/users', icon: Users, requiredRole: ['Administrator'] },
+      { title: 'Security', href: '/security', icon: Shield },
+      { title: 'Settings', href: '/settings', icon: Settings },
     ],
   },
 ]
@@ -184,7 +184,7 @@ export function Sidebar() {
             ) : (
               <>
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                Réduire
+                Collapse
               </>
             )}
           </Button>

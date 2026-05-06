@@ -18,7 +18,7 @@ const ENCRYPTED_KEYS = ['ldap_bind_password'];
 export async function GET(request: NextRequest) {
   const role = request.headers.get('x-user-role');
   if (role !== 'Administrator') {
-    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const db = getDb();
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const role = request.headers.get('x-user-role');
   if (role !== 'Administrator') {
-    return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const body = await request.json();

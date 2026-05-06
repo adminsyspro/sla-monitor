@@ -8,8 +8,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'SLA Monitor - Surveillance de disponibilité',
-  description: 'Plateforme de monitoring et de suivi SLA pour vos applications',
+  title: 'SLA Monitor - Availability Monitoring',
+  description: 'Monitoring and SLA tracking platform for your applications',
 }
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
       </body>

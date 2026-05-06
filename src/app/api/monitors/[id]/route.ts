@@ -30,7 +30,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   const db = getDb();
   const row = db.prepare('SELECT * FROM monitors WHERE id = ?').get(id) as MonitorRow | undefined;
-  if (!row) return NextResponse.json({ error: 'Monitor non trouvé' }, { status: 404 });
+  if (!row) return NextResponse.json({ error: 'Monitor not found' }, { status: 404 });
   return NextResponse.json(toResponse(row));
 }
 
@@ -43,7 +43,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
 
   const existing = db.prepare('SELECT id FROM monitors WHERE id = ?').get(id);
-  if (!existing) return NextResponse.json({ error: 'Monitor non trouvé' }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: 'Monitor not found' }, { status: 404 });
 
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -78,7 +78,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
 
   const existing = db.prepare('SELECT id FROM monitors WHERE id = ?').get(id);
-  if (!existing) return NextResponse.json({ error: 'Monitor non trouvé' }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: 'Monitor not found' }, { status: 404 });
 
   db.prepare('DELETE FROM monitors WHERE id = ?').run(id);
   return NextResponse.json({ success: true });

@@ -36,7 +36,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   const db = getDb();
   const row = db.prepare('SELECT * FROM incidents WHERE id = ?').get(id) as IncidentRow | undefined;
-  if (!row) return NextResponse.json({ error: 'Incident non trouvé' }, { status: 404 });
+  if (!row) return NextResponse.json({ error: 'Incident not found' }, { status: 404 });
   const updates = db.prepare('SELECT * FROM incident_updates WHERE incident_id = ? ORDER BY created_at ASC').all(id) as UpdateRow[];
   return NextResponse.json(toResponse(row, updates));
 }
@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   const db = getDb();
 
   const existing = db.prepare('SELECT * FROM incidents WHERE id = ?').get(id) as IncidentRow | undefined;
-  if (!existing) return NextResponse.json({ error: 'Incident non trouvé' }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: 'Incident not found' }, { status: 404 });
 
   const fields: string[] = [];
   const values: unknown[] = [];

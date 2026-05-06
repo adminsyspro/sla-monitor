@@ -12,7 +12,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
     id: string; monitor_ids: string; target_uptime: number; period: string;
     exclude_maintenance_windows: number;
   } | undefined;
-  if (!target) return NextResponse.json({ error: 'Objectif SLA non trouvé' }, { status: 404 });
+  if (!target) return NextResponse.json({ error: 'SLA target not found' }, { status: 404 });
 
   const monitorIds = parseJsonArray(target.monitor_ids);
   if (monitorIds.length === 0) {

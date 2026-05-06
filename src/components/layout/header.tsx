@@ -79,7 +79,7 @@ export function Header({ title }: HeaderProps) {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Rechercher..."
+            placeholder="Search..."
             className="w-64 pl-9 bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-400 dark:bg-input dark:border-border dark:text-foreground dark:placeholder:text-muted-foreground"
           />
         </div>
@@ -120,13 +120,13 @@ export function Header({ title }: HeaderProps) {
             <DropdownMenuItem asChild>
               <Link href="/profile" className="cursor-pointer">
                 <UserIcon className="mr-2 h-4 w-4" />
-                Profil
+                Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Se déconnecter
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
