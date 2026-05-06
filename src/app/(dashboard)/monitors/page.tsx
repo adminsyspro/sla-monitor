@@ -181,6 +181,8 @@ export default function MonitorsPage() {
   const [editForm, setEditForm] = useState<MonitorFormState>(defaultMonitorForm)
   const [updating, setUpdating] = useState(false)
   const [editError, setEditError] = useState('')
+  const [monitorPendingDelete, setMonitorPendingDelete] = useState<Monitor | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   // Detail sheet state
   const [checkHistory, setCheckHistory] = useState<MonitorCheck[]>([])
@@ -330,13 +332,27 @@ export default function MonitorsPage() {
     }
   }
 
+  const requestDelete = (monitor: Monitor) => {
+    setMonitorPendingDelete(monitor)
+  }
+
   // Delete monitor handler
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
+    if (!monitorPendingDelete) return
+    setDeleting(true)
     try {
-      const res = await fetch(`/api/monitors/${id}`, { method: 'DELETE' })
-      if (res.ok) await fetchMonitors()
+      const res = await fetch(`/api/monitors/${monitorPendingDelete.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setMonitors((prev) => prev.filter((monitor) => monitor.id !== monitorPendingDelete.id))
+        setSelectedMonitor((prev) => (prev?.id === monitorPendingDelete.id ? null : prev))
+        setIsDetailSheetOpen(false)
+        setMonitorPendingDelete(null)
+        await fetchMonitors()
+      }
     } catch (e) {
       console.error('Failed to delete monitor', e)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -683,7 +699,7 @@ export default function MonitorsPage() {
                               Pause
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(monitor.id) }}>
+                            <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); requestDelete(monitor) }}>
                               <Trash2 className="h-4 w-4 mr-2" />
                               Delete
                             </DropdownMenuItem>
@@ -757,6 +773,10 @@ export default function MonitorsPage() {
                       <Button variant="outline" size="sm" onClick={() => openEdit(selectedMonitor)}>
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => requestDelete(selectedMonitor)}>
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
                       </Button>
                       <Button variant="outline" size="sm">
                         <RefreshCw className="h-4 w-4 mr-1" />
@@ -894,6 +914,27 @@ export default function MonitorsPage() {
             )}
           </SheetContent>
         </Sheet>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={!!monitorPendingDelete} onOpenChange={(open) => !open && !deleting && setMonitorPendingDelete(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete monitor?</DialogTitle>
+              <DialogDescription>
+                This will permanently delete "{monitorPendingDelete?.name}" and its stored check history.
+                This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setMonitorPendingDelete(null)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                {deleting ? 'Deleting...' : 'Delete monitor'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Create Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

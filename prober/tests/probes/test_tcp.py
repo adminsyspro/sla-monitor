@@ -1,11 +1,28 @@
 import asyncio
 import pytest
-from prober.probes.tcp import probe_tcp
+from prober.probes.tcp import _parse_target, probe_tcp
 from prober.models import Monitor
 
 
 def make(host: str, port: int, timeout_ms: int = 1000) -> Monitor:
     return Monitor(id="m1", type="tcp", url=host, timeout_ms=timeout_ms, config={"port": port})
+
+
+def test_parse_target_accepts_host_and_config_port():
+    assert _parse_target("example.com", 443) == ("example.com", 443)
+
+
+def test_parse_target_accepts_host_port_url():
+    assert _parse_target("example.com:443", None) == ("example.com", 443)
+
+
+def test_parse_target_accepts_scheme_url():
+    assert _parse_target("tcp://example.com:443", None) == ("example.com", 443)
+    assert _parse_target("ldap://10.10.10.3:389", None) == ("10.10.10.3", 389)
+
+
+def test_parse_target_config_port_overrides_url_port():
+    assert _parse_target("example.com:443", 8443) == ("example.com", 8443)
 
 
 @pytest.fixture
@@ -46,4 +63,4 @@ async def test_missing_port_is_major():
     monitor = Monitor(id="m1", type="tcp", url="example.com", timeout_ms=500, config={})
     r = await probe_tcp(monitor)
     assert r.status == "major"
-    assert r.error and "port" in r.error.lower()
+    assert r.error and "host/port" in r.error.lower()
