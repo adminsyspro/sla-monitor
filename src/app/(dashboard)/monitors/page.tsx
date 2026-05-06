@@ -165,7 +165,7 @@ export default function MonitorsPage() {
   useEffect(() => {
     fetch('/api/settings/retention')
       .then((r) => r.json())
-      .then((d) => setRetentionDays(d.retentionDays ?? 90))
+      .then((d) => setRetentionDays(d.retentionDays === undefined ? 90 : d.retentionDays))
       .catch(() => {})
   }, [])
 
