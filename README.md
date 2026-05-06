@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/logo.svg" alt="SLA Monitor Logo" width="120">
+</p>
+
 <h1 align="center">SLA Monitor</h1>
 
 <p align="center">
@@ -137,17 +141,6 @@ To remove all data:
 docker compose down -v
 ```
 
-### Published Images
-
-The GitHub Actions workflow publishes two images to GHCR:
-
-| Image | Description |
-|---|---|
-| `ghcr.io/adminsyspro/sla-monitor:latest` | Next.js web application |
-| `ghcr.io/adminsyspro/sla-monitor-prober:latest` | Python probing service |
-
----
-
 ## Configuration
 
 ### Environment Variables
@@ -168,116 +161,6 @@ Generate secrets with:
 ```bash
 openssl rand -hex 32
 ```
-
-### Ping Monitors
-
-The Compose stack sets:
-
-```yaml
-sysctls:
-  net.ipv4.ping_group_range: "0 2147483647"
-```
-
-This allows the prober to run unprivileged ICMP checks. If your runtime does not allow this sysctl, Ping monitors may require additional container capabilities or host-level configuration.
-
----
-
-## Status Page
-
-The public status page is available at:
-
-```text
-/status-page
-```
-
-Administrators configure it from:
-
-```text
-/status
-```
-
-It supports:
-
-- Service groups and ungrouped services.
-- Current overall status.
-- Custom operational/degraded/maintenance/outage messages.
-- Branding, colors, card radius, logo, and footer text.
-- Aggregate uptime history for `24h`, `7d`, `30d`, `90d`, and `1y`.
-- Per-monitor uptime timelines.
-- Incident details and update history.
-- Upcoming and active maintenance windows.
-
----
-
-## Incidents
-
-Incidents can be managed manually or created automatically from monitor failures.
-
-Automatic behavior:
-
-- A failing monitor creates one active system incident per monitor.
-- Repeated failures update the existing active incident instead of creating duplicates.
-- When the monitor recovers, the system incident is marked `resolved`.
-- Manual incidents are not auto-resolved by monitor recovery.
-
-Incident registry fields include:
-
-- Root cause.
-- Impact.
-- Resolution.
-- Preventive actions.
-- Owner and tags.
-- Related incidents.
-- Timeline updates.
-
----
-
-## Maintenance Windows
-
-Maintenance windows can be created from:
-
-```text
-/maintenance
-```
-
-When a maintenance window starts:
-
-- Selected monitors move to `maintenance`.
-- Monitor checks continue to be stored.
-- The visible monitor status remains protected from check updates during maintenance.
-
-When a maintenance window completes:
-
-- Each affected monitor is restored to its latest real check status.
-- If no real check exists, the monitor falls back to `unknown`.
-
-Maintenance transitions are applied by the web APIs and by the prober polling flow, so scheduled windows progress automatically while the stack is running.
-
----
-
-## SLA Reports
-
-SLA reports are available at:
-
-```text
-/reports
-```
-
-They support:
-
-- Predefined and custom periods.
-- Detail views.
-- Error budget display.
-- Styled PDF export.
-- Direct PDF download without opening the print dialog.
-
-SLA targets are managed from:
-
-```text
-/sla-targets
-```
-
----
 
 ## Authentication
 
@@ -350,23 +233,6 @@ cd prober
 pip install -e ".[dev]"
 PROBER_TOKEN=your-token NEXT_INTERNAL_URL=http://localhost:3000 python -m prober
 ```
-
----
-
-## CI
-
-GitHub Actions builds and publishes both Docker images:
-
-```text
-.github/workflows/docker-publish.yml
-```
-
-Behavior:
-
-- Pull requests: build only.
-- Push to `main`: build and publish `latest` and branch tags.
-- Tags `v*`: build and publish semantic version tags.
-- Manual workflow dispatch: optional custom version tag.
 
 ---
 
