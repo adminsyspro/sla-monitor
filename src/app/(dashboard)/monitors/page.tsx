@@ -37,6 +37,9 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ALL_WINDOWS, parseWindow, isWindowAvailable, type WindowPreset } from '@/lib/window'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { DateRangePicker } from '@/components/ui/date-picker'
@@ -153,6 +156,25 @@ export default function MonitorsPage() {
   // Per-monitor uptime cache for list view
   const [uptimeMap, setUptimeMap] = useState<Record<string, { uptime: number; avgResponseTime: number }>>({})
 
+  // Window selector
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const currentWindow: WindowPreset = parseWindow(searchParams?.get('window') ?? null)
+  const [retentionDays, setRetentionDays] = useState<number | null>(90)
+
+  useEffect(() => {
+    fetch('/api/settings/retention')
+      .then((r) => r.json())
+      .then((d) => setRetentionDays(d.retentionDays ?? 90))
+      .catch(() => {})
+  }, [])
+
+  const setWindow = (w: WindowPreset) => {
+    const params = new URLSearchParams(Array.from(searchParams?.entries() ?? []))
+    params.set('window', w)
+    router.replace(`/monitors?${params.toString()}`)
+  }
+
   // Fetch monitors
   const fetchMonitors = useCallback(async () => {
     try {
@@ -177,7 +199,7 @@ export default function MonitorsPage() {
     if (monitors.length === 0) return
     monitors.forEach(async (m) => {
       try {
-        const res = await fetch(`/api/monitors/${m.id}/uptime?period=30d`)
+        const res = await fetch(`/api/monitors/${m.id}/uptime?period=${currentWindow}`)
         if (res.ok) {
           const data: UptimeResponse = await res.json()
           setUptimeMap((prev) => ({
@@ -187,7 +209,7 @@ export default function MonitorsPage() {
         }
       } catch { /* ignore */ }
     })
-  }, [monitors])
+  }, [monitors, currentWindow])
 
   // Fetch detail data when selected monitor changes
   useEffect(() => {
@@ -196,7 +218,7 @@ export default function MonitorsPage() {
     const id = selectedMonitor.id
     Promise.all([
       fetch(`/api/monitors/${id}/checks?period=24h`).then(r => r.ok ? r.json() : null),
-      fetch(`/api/monitors/${id}/uptime?period=30d`).then(r => r.ok ? r.json() : null),
+      fetch(`/api/monitors/${id}/uptime?period=${currentWindow}`).then(r => r.ok ? r.json() : null),
     ]).then(([checksRes, uptimeRes]) => {
       if (checksRes?.data) setCheckHistory(checksRes.data)
       if (uptimeRes) {
@@ -204,7 +226,7 @@ export default function MonitorsPage() {
         setUptimeData(uptimeRes.dailyData || [])
       }
     }).catch(console.error).finally(() => setDetailLoading(false))
-  }, [selectedMonitor])
+  }, [selectedMonitor, currentWindow])
 
   // Create monitor handler
   const handleCreate = async () => {
@@ -382,6 +404,34 @@ export default function MonitorsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Window selector */}
+        <TooltipProvider>
+          <Tabs value={currentWindow} onValueChange={(v) => setWindow(v as WindowPreset)} className="mb-4">
+            <TabsList>
+              {ALL_WINDOWS.map((w) => {
+                const available = isWindowAvailable(w, retentionDays)
+                const trigger = (
+                  <TabsTrigger key={w} value={w} disabled={!available}>
+                    {w}
+                  </TabsTrigger>
+                )
+                return available ? (
+                  trigger
+                ) : (
+                  <Tooltip key={w}>
+                    <TooltipTrigger asChild>
+                      <span>{trigger}</span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Retention is set to {retentionDays} days
+                    </TooltipContent>
+                  </Tooltip>
+                )
+              })}
+            </TabsList>
+          </Tabs>
+        </TooltipProvider>
 
         {/* Filters Bar */}
         <Card>
@@ -657,7 +707,7 @@ export default function MonitorsPage() {
                       <p className="text-2xl font-bold text-green-500">
                         {detailUptime ? detailUptime.uptime.toFixed(2) + '%' : '—'}
                       </p>
-                      <p className="text-xs text-muted-foreground">30d uptime</p>
+                      <p className="text-xs text-muted-foreground">{currentWindow} uptime</p>
                     </div>
                     <div className="rounded-lg border p-3 text-center">
                       <p className="text-2xl font-bold">
@@ -681,7 +731,7 @@ export default function MonitorsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium">Uptime History</h4>
-                      <span className="text-sm text-muted-foreground">Last 90 days</span>
+                      <span className="text-sm text-muted-foreground">Last {currentWindow}</span>
                     </div>
                     <UptimeBar data={uptimeData} />
                   </div>
