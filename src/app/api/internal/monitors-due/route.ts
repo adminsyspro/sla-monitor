@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { validateProberToken } from '@/lib/auth/prober-token';
+import { applyMaintenanceTransitions } from '@/lib/maintenance';
 import type { DueMonitor, MonitorType } from '@/lib/internal-types';
 
 interface MonitorRow {
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
   if (!validateProberToken(request.headers.get('authorization'), db)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
+  applyMaintenanceTransitions(db);
 
   const url = new URL(request.url);
   const rawLimit = parseInt(url.searchParams.get('limit') ?? '100', 10);

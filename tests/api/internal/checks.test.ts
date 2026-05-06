@@ -20,6 +20,33 @@ function makeDb(): Database.Database {
       id TEXT PRIMARY KEY, monitor_id TEXT, timestamp INTEGER, status TEXT,
       response_time INTEGER, status_code INTEGER, error TEXT, region TEXT, metadata TEXT
     );
+    CREATE TABLE incidents (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'investigating',
+      severity TEXT NOT NULL DEFAULT 'minor',
+      affected_monitors TEXT DEFAULT '[]',
+      started_at INTEGER NOT NULL,
+      resolved_at INTEGER DEFAULT NULL,
+      root_cause TEXT DEFAULT NULL,
+      postmortem TEXT DEFAULT NULL,
+      impact TEXT DEFAULT '',
+      resolution TEXT DEFAULT '',
+      preventive_actions TEXT DEFAULT '',
+      owner TEXT DEFAULT '',
+      tags TEXT DEFAULT '[]',
+      created_by TEXT NOT NULL DEFAULT 'system',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+    CREATE TABLE incident_updates (
+      id TEXT PRIMARY KEY,
+      incident_id TEXT NOT NULL,
+      status TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_by TEXT NOT NULL DEFAULT 'system',
+      created_at INTEGER NOT NULL
+    );
   `);
   return db;
 }
@@ -138,5 +165,55 @@ describe('POST /api/internal/checks', () => {
       `SELECT status FROM monitors WHERE id = 'm1'`
     ).get() as any;
     expect(monitor.status).toBe('major');
+  });
+
+  it('creates one active system incident for a failing monitor', async () => {
+    const body = {
+      ...validBody,
+      status: 'major' as const,
+      error: 'connection refused',
+      response_time_ms: null,
+      status_code: null,
+    };
+    const res = await POST(postReq(body, { Authorization: `Bearer ${token}` }) as any);
+    expect(res.status).toBe(201);
+
+    const incident = mockDb.current!.prepare(
+      `SELECT * FROM incidents WHERE created_by = 'system'`
+    ).get() as any;
+    expect(incident).toBeTruthy();
+    expect(incident.severity).toBe('major');
+    expect(incident.affected_monitors).toBe(JSON.stringify(['m1']));
+
+    const update = mockDb.current!.prepare(
+      `SELECT * FROM incident_updates WHERE incident_id = ?`
+    ).get(incident.id) as any;
+    expect(update.message).toContain('connection refused');
+  });
+
+  it('does not create duplicate incidents for repeated failures on the same monitor', async () => {
+    const body = { ...validBody, status: 'major' as const };
+    await POST(postReq(body, { Authorization: `Bearer ${token}` }) as any);
+    await POST(postReq({ ...body, timestamp: validBody.timestamp + 60 }, { Authorization: `Bearer ${token}` }) as any);
+
+    const count = mockDb.current!.prepare(`SELECT COUNT(*) as count FROM incidents`).get() as any;
+    const updates = mockDb.current!.prepare(`SELECT COUNT(*) as count FROM incident_updates`).get() as any;
+    expect(count.count).toBe(1);
+    expect(updates.count).toBe(1);
+  });
+
+  it('resolves the active system incident when the monitor recovers', async () => {
+    const failingBody = { ...validBody, status: 'major' as const };
+    await POST(postReq(failingBody, { Authorization: `Bearer ${token}` }) as any);
+    await POST(postReq({ ...validBody, timestamp: validBody.timestamp + 60 }, { Authorization: `Bearer ${token}` }) as any);
+
+    const incident = mockDb.current!.prepare(`SELECT * FROM incidents`).get() as any;
+    expect(incident.status).toBe('resolved');
+    expect(incident.resolved_at).toBe(validBody.timestamp + 60);
+
+    const resolvedUpdate = mockDb.current!.prepare(
+      `SELECT * FROM incident_updates WHERE status = 'resolved'`
+    ).get() as any;
+    expect(resolvedUpdate.message).toContain('recovered');
   });
 });

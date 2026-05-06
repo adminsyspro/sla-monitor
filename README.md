@@ -66,12 +66,29 @@ npm start
 
 ```bash
 cp .env.example .env
-# Edit .env to set PROBER_TOKEN and NEXTAUTH_SECRET
-# (use: openssl rand -hex 32)
+# Edit .env to set PROBER_TOKEN and AUTH_SECRET
+# Generate both values with: openssl rand -hex 32
 docker compose up --build
 ```
 
-The web UI is at `http://localhost:3000`. The prober runs in the background and starts checking your monitors at their configured intervals.
+The web UI is available at `http://localhost:3000`. The prober runs as a separate container and starts checking monitors at their configured intervals once the web container is healthy.
+
+Default local credentials are created on first startup:
+
+```text
+username: admin
+password: admin
+```
+
+The SQLite database is persisted in the `sla-monitor-data` Docker volume. To inspect the services:
+
+```bash
+docker compose ps
+docker compose logs -f web
+docker compose logs -f prober
+```
+
+For Ping monitors, the compose stack configures `net.ipv4.ping_group_range` for the prober container so unprivileged ICMP checks can run.
 
 ## Structure du projet
 
@@ -127,14 +144,16 @@ src/
 
 ```env
 # Base de données
-DATABASE_URL=file:./data/sla-monitor.db
+DATABASE_URL=file:/app/data/sla-monitor.db
 
-# API Backend (Phase 2)
-API_URL=http://localhost:8080
+# Prober token shared by the web app and prober
+PROBER_TOKEN=your-secret-token
 
-# Authentification (Phase 2)
-NEXTAUTH_SECRET=your-secret
-NEXTAUTH_URL=http://localhost:3000
+# Session signing secret
+AUTH_SECRET=your-secret
+
+# Secure cookies when serving over HTTPS
+FORCE_HTTPS=false
 ```
 
 ## Licence

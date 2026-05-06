@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { checkWriteAccess, parseJsonArray, fromEpoch } from '@/lib/api-helpers';
+import { applyMaintenanceTransitions } from '@/lib/maintenance';
 
 interface MaintRow {
   id: string; title: string; description: string; affected_monitors: string;
@@ -24,6 +25,8 @@ function toResponse(row: MaintRow) {
 
 export async function GET(request: NextRequest) {
   const db = getDb();
+  applyMaintenanceTransitions(db);
+
   const status = request.nextUrl.searchParams.get('status');
   const search = request.nextUrl.searchParams.get('search');
 
@@ -52,14 +55,20 @@ export async function POST(request: NextRequest) {
 
   const db = getDb();
   const id = crypto.randomUUID();
+  const normalizedAffectedMonitors = Array.isArray(affectedMonitors) ? affectedMonitors : [];
 
   const start = Math.floor(new Date(scheduledStart).getTime() / 1000);
   const end = Math.floor(new Date(scheduledEnd).getTime() / 1000);
 
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+    return NextResponse.json({ error: 'Scheduled end must be after scheduled start' }, { status: 400 });
+  }
+
   db.prepare(
     `INSERT INTO maintenance_windows (id, title, description, affected_monitors, scheduled_start, scheduled_end, created_by)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, title, description || '', JSON.stringify(affectedMonitors || []), start, end, auth.username || 'admin');
+  ).run(id, title, description || '', JSON.stringify(normalizedAffectedMonitors), start, end, auth.username || 'admin');
+  applyMaintenanceTransitions(db);
 
   const row = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow;
   return NextResponse.json(toResponse(row), { status: 201 });

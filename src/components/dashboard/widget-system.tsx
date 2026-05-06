@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type DragEvent } from 'react'
 import {
   Activity,
   AlertTriangle,
@@ -130,6 +130,11 @@ interface WidgetWrapperProps {
   onResize: (size: WidgetSize) => void
   onRefresh?: () => void
   isEditMode: boolean
+  isDragging?: boolean
+  onDragStart?: (event: DragEvent<HTMLDivElement>) => void
+  onDragEnd?: (event: DragEvent<HTMLDivElement>) => void
+  onDragOver?: (event: DragEvent<HTMLDivElement>) => void
+  onDrop?: (event: DragEvent<HTMLDivElement>) => void
 }
 
 export function WidgetWrapper({
@@ -139,6 +144,11 @@ export function WidgetWrapper({
   onResize,
   onRefresh,
   isEditMode,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
 }: WidgetWrapperProps) {
   const [isHovered, setIsHovered] = useState(false)
 
@@ -149,7 +159,13 @@ export function WidgetWrapper({
         'relative transition-all',
         isEditMode && 'ring-2 ring-dashed ring-primary/30 cursor-move',
         isHovered && isEditMode && 'ring-primary/50',
+        isDragging && 'opacity-50 scale-[0.98]',
       )}
+      draggable={isEditMode}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -361,7 +377,7 @@ export function DashboardControls({
     <div className="flex items-center gap-2">
       <Button variant="outline" size="sm" onClick={onRefreshAll}>
         <RefreshCw className="h-4 w-4 mr-2" />
-        Actualiser
+        Refresh
       </Button>
       <Button variant="outline" size="sm" onClick={onOpenSettings}>
         <Settings className="h-4 w-4 mr-2" />
@@ -378,7 +394,7 @@ export function DashboardControls({
       {isEditMode && (
         <Button size="sm" onClick={onAddWidget}>
           <Plus className="h-4 w-4 mr-2" />
-          Ajouter
+          Add
         </Button>
       )}
     </div>

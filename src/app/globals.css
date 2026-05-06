@@ -120,6 +120,15 @@
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
+.uptime-bar-dense {
+  gap: 0;
+}
+
+.uptime-bar-dense .uptime-bar-segment {
+  min-width: 0;
+  border-radius: 1px;
+}
+
 .uptime-bar-segment:hover {
   transform: scaleY(1.2);
   opacity: 0.9;

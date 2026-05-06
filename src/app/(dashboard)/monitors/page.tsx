@@ -37,9 +37,8 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ALL_WINDOWS, parseWindow, isWindowAvailable, windowToDays, type WindowPreset } from '@/lib/window'
+import { ALL_WINDOWS, parseWindow, windowToDays, type WindowPreset } from '@/lib/window'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { DateRangePicker } from '@/components/ui/date-picker'
@@ -91,6 +90,41 @@ interface UptimeResponse {
   dailyData: UptimeData[]
 }
 
+interface MonitorFormState {
+  name: string
+  type: MonitorType
+  url: string
+  interval: number
+  timeout: number
+  enabled: boolean
+  expectedStatusCode: string
+  port: string
+}
+
+const defaultMonitorForm: MonitorFormState = {
+  name: '',
+  type: 'http',
+  url: '',
+  interval: 60,
+  timeout: 10000,
+  enabled: true,
+  expectedStatusCode: '',
+  port: '',
+}
+
+function monitorToForm(monitor: Monitor): MonitorFormState {
+  return {
+    name: monitor.name,
+    type: monitor.type,
+    url: monitor.url,
+    interval: monitor.interval,
+    timeout: monitor.timeout,
+    enabled: monitor.enabled,
+    expectedStatusCode: monitor.expectedStatusCode?.toString() ?? '',
+    port: monitor.port?.toString() ?? '',
+  }
+}
+
 function getTypeIcon(type: MonitorType) {
   switch (type) {
     case 'http':
@@ -135,17 +169,18 @@ export default function MonitorsPage() {
   const [selectedMonitor, setSelectedMonitor] = useState<Monitor | null>(null)
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({})
 
   // Create form state
-  const [createForm, setCreateForm] = useState({
-    name: '',
-    type: 'http' as MonitorType,
-    url: '',
-    interval: 60,
-    timeout: 10000,
-  })
+  const [createForm, setCreateForm] = useState<MonitorFormState>(defaultMonitorForm)
   const [creating, setCreating] = useState(false)
+
+  // Edit form state
+  const [editingMonitor, setEditingMonitor] = useState<Monitor | null>(null)
+  const [editForm, setEditForm] = useState<MonitorFormState>(defaultMonitorForm)
+  const [updating, setUpdating] = useState(false)
+  const [editError, setEditError] = useState('')
 
   // Detail sheet state
   const [checkHistory, setCheckHistory] = useState<MonitorCheck[]>([])
@@ -160,15 +195,6 @@ export default function MonitorsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentWindow: WindowPreset = parseWindow(searchParams?.get('window') ?? null)
-  const [retentionDays, setRetentionDays] = useState<number | null>(90)
-
-  useEffect(() => {
-    fetch('/api/settings/retention')
-      .then((r) => r.json())
-      .then((d) => setRetentionDays(d.retentionDays === undefined ? 90 : d.retentionDays))
-      .catch(() => {})
-  }, [])
-
   const setWindow = (w: WindowPreset) => {
     const params = new URLSearchParams(Array.from(searchParams?.entries() ?? []))
     params.set('window', w)
@@ -236,17 +262,71 @@ export default function MonitorsPage() {
       const res = await fetch('/api/monitors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(createForm),
+        body: JSON.stringify({
+          name: createForm.name,
+          type: createForm.type,
+          url: createForm.url,
+          interval: createForm.interval,
+          timeout: createForm.timeout,
+          expectedStatusCode: createForm.expectedStatusCode ? Number(createForm.expectedStatusCode) : undefined,
+          port: createForm.port ? Number(createForm.port) : undefined,
+        }),
       })
       if (res.ok) {
         setIsCreateDialogOpen(false)
-        setCreateForm({ name: '', type: 'http', url: '', interval: 60, timeout: 10000 })
+        setCreateForm(defaultMonitorForm)
         await fetchMonitors()
       }
     } catch (e) {
       console.error('Failed to create monitor', e)
     } finally {
       setCreating(false)
+    }
+  }
+
+  const openEdit = (monitor: Monitor) => {
+    setEditingMonitor(monitor)
+    setEditForm(monitorToForm(monitor))
+    setEditError('')
+    setIsEditDialogOpen(true)
+  }
+
+  const handleUpdate = async () => {
+    if (!editingMonitor || !editForm.name || !editForm.url) return
+    setUpdating(true)
+    setEditError('')
+    try {
+      const res = await fetch(`/api/monitors/${editingMonitor.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editForm.name,
+          type: editForm.type,
+          url: editForm.url,
+          interval: editForm.interval,
+          timeout: editForm.timeout,
+          enabled: editForm.enabled,
+          expectedStatusCode: editForm.expectedStatusCode ? Number(editForm.expectedStatusCode) : null,
+          port: editForm.port ? Number(editForm.port) : null,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        setEditError(data.error || 'Failed to update monitor')
+        return
+      }
+
+      setMonitors((prev) => prev.map((monitor) => (monitor.id === data.id ? data : monitor)))
+      setSelectedMonitor((prev) => (prev?.id === data.id ? data : prev))
+      setEditingMonitor(data)
+      setIsEditDialogOpen(false)
+      await fetchMonitors()
+    } catch (e) {
+      console.error('Failed to update monitor', e)
+      setEditError('Failed to update monitor')
+    } finally {
+      setUpdating(false)
     }
   }
 
@@ -406,32 +486,15 @@ export default function MonitorsPage() {
         </div>
 
         {/* Window selector */}
-        <TooltipProvider>
-          <Tabs value={currentWindow} onValueChange={(v) => setWindow(v as WindowPreset)} className="mb-4">
-            <TabsList>
-              {ALL_WINDOWS.map((w) => {
-                const available = isWindowAvailable(w, retentionDays)
-                const trigger = (
-                  <TabsTrigger key={w} value={w} disabled={!available}>
-                    {w}
-                  </TabsTrigger>
-                )
-                return available ? (
-                  trigger
-                ) : (
-                  <Tooltip key={w}>
-                    <TooltipTrigger asChild>
-                      <span>{trigger}</span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Retention is set to {retentionDays} days
-                    </TooltipContent>
-                  </Tooltip>
-                )
-              })}
-            </TabsList>
-          </Tabs>
-        </TooltipProvider>
+        <Tabs value={currentWindow} onValueChange={(v) => setWindow(v as WindowPreset)} className="mb-4">
+          <TabsList>
+            {ALL_WINDOWS.map((w) => (
+              <TabsTrigger key={w} value={w}>
+                {w}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
         {/* Filters Bar */}
         <Card>
@@ -611,7 +674,7 @@ export default function MonitorsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(monitor) }}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
@@ -691,7 +754,7 @@ export default function MonitorsPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => openEdit(selectedMonitor)}>
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
@@ -863,6 +926,7 @@ export default function MonitorsPage() {
                     <SelectItem value="http">HTTP(S)</SelectItem>
                     <SelectItem value="tcp">TCP</SelectItem>
                     <SelectItem value="ping">Ping</SelectItem>
+                    <SelectItem value="dns">DNS</SelectItem>
                     <SelectItem value="ssl">SSL Certificate</SelectItem>
                   </SelectContent>
                 </Select>
@@ -893,6 +957,26 @@ export default function MonitorsPage() {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Expected HTTP code</Label>
+                  <Input
+                    type="number"
+                    placeholder="200"
+                    value={createForm.expectedStatusCode}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, expectedStatusCode: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Port</Label>
+                  <Input
+                    type="number"
+                    placeholder="443"
+                    value={createForm.port}
+                    onChange={(e) => setCreateForm((f) => ({ ...f, port: e.target.value }))}
+                  />
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -900,6 +984,111 @@ export default function MonitorsPage() {
               </Button>
               <Button onClick={handleCreate} disabled={creating || !createForm.name || !createForm.url}>
                 {creating ? 'Creating...' : 'Create monitor'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Edit monitor</DialogTitle>
+              <DialogDescription>
+                Update this monitor configuration.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              {editError && (
+                <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                  {editError}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select
+                  value={editForm.type}
+                  onValueChange={(v) => setEditForm((f) => ({ ...f, type: v as MonitorType }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="http">HTTP(S)</SelectItem>
+                    <SelectItem value="tcp">TCP</SelectItem>
+                    <SelectItem value="ping">Ping</SelectItem>
+                    <SelectItem value="dns">DNS</SelectItem>
+                    <SelectItem value="ssl">SSL Certificate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>URL or Host</Label>
+                <Input
+                  value={editForm.url}
+                  onChange={(e) => setEditForm((f) => ({ ...f, url: e.target.value }))}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Interval (seconds)</Label>
+                  <Input
+                    type="number"
+                    value={editForm.interval}
+                    onChange={(e) => setEditForm((f) => ({ ...f, interval: Number(e.target.value) }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Timeout (ms)</Label>
+                  <Input
+                    type="number"
+                    value={editForm.timeout}
+                    onChange={(e) => setEditForm((f) => ({ ...f, timeout: Number(e.target.value) }))}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Expected HTTP code</Label>
+                  <Input
+                    type="number"
+                    placeholder="200"
+                    value={editForm.expectedStatusCode}
+                    onChange={(e) => setEditForm((f) => ({ ...f, expectedStatusCode: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Port</Label>
+                  <Input
+                    type="number"
+                    placeholder="443"
+                    value={editForm.port}
+                    onChange={(e) => setEditForm((f) => ({ ...f, port: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={editForm.enabled}
+                  onChange={(e) => setEditForm((f) => ({ ...f, enabled: e.target.checked }))}
+                />
+                Enabled
+              </label>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdate} disabled={updating || !editForm.name || !editForm.url}>
+                {updating ? 'Saving...' : 'Save changes'}
               </Button>
             </DialogFooter>
           </DialogContent>

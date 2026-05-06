@@ -58,6 +58,8 @@ function getStatusLabel(status: MonitorStatus): string {
 }
 
 export function UptimeBar({ data, className, days = 90 }: UptimeBarProps) {
+  const isDense = days > 180
+
   // Ensure we have `days` days of data
   const normalizedData = useMemo(() => {
     const result: UptimeDay[] = []
@@ -83,7 +85,7 @@ export function UptimeBar({ data, className, days = 90 }: UptimeBarProps) {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className={cn('uptime-bar', className)}>
+      <div className={cn('uptime-bar', isDense && 'uptime-bar-dense', className)}>
         {normalizedData.map((day, index) => (
           <Tooltip key={day.date}>
             <TooltipTrigger asChild>

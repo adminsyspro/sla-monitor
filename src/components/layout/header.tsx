@@ -1,9 +1,8 @@
 'use client'
 
-import { Bell, LogOut, Moon, Search, Sun, User as UserIcon } from 'lucide-react'
+import { LogOut, Moon, Sun, User as UserIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Avatar,
   AvatarFallback,
@@ -74,24 +73,6 @@ export function Header({ title }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Search */}
-        <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search..."
-            className="w-64 pl-9 bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-400 dark:bg-input dark:border-border dark:text-foreground dark:placeholder:text-muted-foreground"
-          />
-        </div>
-
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative text-slate-300 hover:text-white hover:bg-slate-800 dark:text-inherit dark:hover:bg-accent">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
-            3
-          </span>
-        </Button>
-
         {/* Theme Toggle */}
         <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-slate-300 hover:text-white hover:bg-slate-800 dark:text-inherit dark:hover:bg-accent">
           {mounted && theme === 'dark' ? (

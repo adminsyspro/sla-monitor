@@ -212,6 +212,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [nextMaintenance, setNextMaintenance] = useState<MaintenanceWindow | null | undefined>(undefined)
+  const [draggedWidgetId, setDraggedWidgetId] = useState<string | null>(null)
 
   // Fetch dashboard data
   const fetchDashboardData = useCallback(async () => {
@@ -294,8 +295,32 @@ export default function DashboardPage() {
     setWidgets(widgets.map(w => w.id === id ? { ...w, enabled: !w.enabled } : w))
   }
 
+  const handleMoveWidget = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return
+
+    setWidgets((currentWidgets) => {
+      const sortedWidgets = [...currentWidgets].sort((a, b) => a.order - b.order)
+      const enabled = sortedWidgets.filter((widget) => widget.enabled)
+      const disabled = sortedWidgets.filter((widget) => !widget.enabled)
+      const draggedIndex = enabled.findIndex((widget) => widget.id === draggedId)
+      const targetIndex = enabled.findIndex((widget) => widget.id === targetId)
+
+      if (draggedIndex === -1 || targetIndex === -1) return currentWidgets
+
+      const reordered = [...enabled]
+      const [dragged] = reordered.splice(draggedIndex, 1)
+      reordered.splice(targetIndex, 0, dragged)
+
+      return [...reordered, ...disabled].map((widget, index) => ({
+        ...widget,
+        order: index + 1,
+      }))
+    })
+  }
+
   const handleResetLayout = () => {
     setWidgets(defaultWidgets)
+    setDraggedWidgetId(null)
   }
 
   // Render widget content based on type
@@ -487,9 +512,28 @@ export default function DashboardPage() {
               key={widget.id}
               widget={widget}
               isEditMode={isEditMode}
+              isDragging={draggedWidgetId === widget.id}
               onRemove={() => handleRemoveWidget(widget.id)}
               onResize={(size) => handleResizeWidget(widget.id, size)}
               onRefresh={handleRefreshAll}
+              onDragStart={(event) => {
+                if (!isEditMode) return
+                setDraggedWidgetId(widget.id)
+                event.dataTransfer.effectAllowed = 'move'
+                event.dataTransfer.setData('text/plain', widget.id)
+              }}
+              onDragEnd={() => setDraggedWidgetId(null)}
+              onDragOver={(event) => {
+                if (!isEditMode || !draggedWidgetId || draggedWidgetId === widget.id) return
+                event.preventDefault()
+                event.dataTransfer.dropEffect = 'move'
+              }}
+              onDrop={(event) => {
+                event.preventDefault()
+                const sourceId = event.dataTransfer.getData('text/plain') || draggedWidgetId
+                if (sourceId) handleMoveWidget(sourceId, widget.id)
+                setDraggedWidgetId(null)
+              }}
             >
               {renderWidgetContent(widget)}
             </WidgetWrapper>

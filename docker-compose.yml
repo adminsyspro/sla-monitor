@@ -1,29 +1,47 @@
 services:
   web:
+    container_name: sla-monitor-web
     build: .
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: file:./data/sla-monitor.db
+      NODE_ENV: production
+      DATABASE_URL: file:/app/data/sla-monitor.db
+      AUTH_SECRET: ${AUTH_SECRET}
       PROBER_TOKEN: ${PROBER_TOKEN}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      FORCE_HTTPS: ${FORCE_HTTPS:-false}
     volumes:
-      - ./data:/app/data
+      - sla-monitor-data:/app/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   prober:
+    container_name: sla-monitor-prober
     build: ./prober
     environment:
       NEXT_INTERNAL_URL: http://web:3000
       PROBER_TOKEN: ${PROBER_TOKEN}
-      POLL_INTERVAL_SECONDS: "5"
-      MAX_CONCURRENT_CHECKS: "50"
-      LOG_LEVEL: INFO
+      POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-5}
+      MAX_CONCURRENT_CHECKS: ${MAX_CONCURRENT_CHECKS:-50}
+      CLEANUP_INTERVAL_SECONDS: ${CLEANUP_INTERVAL_SECONDS:-3600}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     depends_on:
-      - web
+      web:
+        condition: service_healthy
+    sysctls:
+      net.ipv4.ping_group_range: "0 2147483647"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 10s
+
+volumes:
+  sla-monitor-data:

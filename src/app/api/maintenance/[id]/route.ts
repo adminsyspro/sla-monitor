@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { checkWriteAccess, parseJsonArray, fromEpoch } from '@/lib/api-helpers';
+import {
+  applyMaintenanceTransitions,
+  completeMaintenanceWindow,
+  startMaintenanceWindow,
+  syncInProgressMaintenanceMonitors,
+} from '@/lib/maintenance';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -27,6 +33,8 @@ function toResponse(row: MaintRow) {
 export async function GET(_request: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   const db = getDb();
+  applyMaintenanceTransitions(db);
+
   const row = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow | undefined;
   if (!row) return NextResponse.json({ error: 'Maintenance not found' }, { status: 404 });
   return NextResponse.json(toResponse(row));
@@ -40,7 +48,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   const body = await request.json();
   const db = getDb();
 
-  const existing = db.prepare('SELECT id FROM maintenance_windows WHERE id = ?').get(id);
+  const existing = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow | undefined;
   if (!existing) return NextResponse.json({ error: 'Maintenance not found' }, { status: 404 });
 
   const fields: string[] = [];
@@ -48,16 +56,34 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
   if (body.title !== undefined) { fields.push('title = ?'); values.push(body.title); }
   if (body.description !== undefined) { fields.push('description = ?'); values.push(body.description); }
-  if (body.affectedMonitors !== undefined) { fields.push('affected_monitors = ?'); values.push(JSON.stringify(body.affectedMonitors)); }
-  if (body.scheduledStart !== undefined) { fields.push('scheduled_start = ?'); values.push(Math.floor(new Date(body.scheduledStart).getTime() / 1000)); }
-  if (body.scheduledEnd !== undefined) { fields.push('scheduled_end = ?'); values.push(Math.floor(new Date(body.scheduledEnd).getTime() / 1000)); }
+  if (body.affectedMonitors !== undefined) {
+    fields.push('affected_monitors = ?');
+    values.push(JSON.stringify(Array.isArray(body.affectedMonitors) ? body.affectedMonitors : []));
+  }
+  const nextStart = body.scheduledStart !== undefined
+    ? Math.floor(new Date(body.scheduledStart).getTime() / 1000)
+    : existing.scheduled_start;
+  const nextEnd = body.scheduledEnd !== undefined
+    ? Math.floor(new Date(body.scheduledEnd).getTime() / 1000)
+    : existing.scheduled_end;
+
+  if (!Number.isFinite(nextStart) || !Number.isFinite(nextEnd) || nextEnd <= nextStart) {
+    return NextResponse.json({ error: 'Scheduled end must be after scheduled start' }, { status: 400 });
+  }
+
+  if (body.scheduledStart !== undefined) { fields.push('scheduled_start = ?'); values.push(nextStart); }
+  if (body.scheduledEnd !== undefined) { fields.push('scheduled_end = ?'); values.push(nextEnd); }
   if (body.status !== undefined) { fields.push('status = ?'); values.push(body.status); }
 
   fields.push('updated_at = unixepoch()');
   db.prepare(`UPDATE maintenance_windows SET ${fields.join(', ')} WHERE id = ?`).run(...values, id);
 
   const row = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow;
-  return NextResponse.json(toResponse(row));
+  syncInProgressMaintenanceMonitors(db, existing, row);
+  applyMaintenanceTransitions(db);
+
+  const updatedRow = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow;
+  return NextResponse.json(toResponse(updatedRow));
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
@@ -66,6 +92,13 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
 
   const { id } = await params;
   const db = getDb();
+  applyMaintenanceTransitions(db);
+
+  const existing = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow | undefined;
+  if (existing?.status === 'in_progress') {
+    completeMaintenanceWindow(db, existing, Math.floor(Date.now() / 1000));
+  }
+
   db.prepare('DELETE FROM maintenance_windows WHERE id = ?').run(id);
   return NextResponse.json({ success: true });
 }
@@ -81,17 +114,14 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
   const existing = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow | undefined;
   if (!existing) return NextResponse.json({ error: 'Maintenance not found' }, { status: 404 });
+  const now = Math.floor(Date.now() / 1000);
 
   if (action === 'start') {
-    db.prepare(
-      `UPDATE maintenance_windows SET actual_start = unixepoch(), status = 'in_progress', updated_at = unixepoch() WHERE id = ?`
-    ).run(id);
+    startMaintenanceWindow(db, existing, now);
   } else if (action === 'complete') {
-    db.prepare(
-      `UPDATE maintenance_windows SET actual_end = unixepoch(), status = 'completed', updated_at = unixepoch() WHERE id = ?`
-    ).run(id);
+    completeMaintenanceWindow(db, existing, now);
   } else {
-    return NextResponse.json({ error: 'Action invalide (start ou complete)' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid action (start or complete)' }, { status: 400 });
   }
 
   const row = db.prepare('SELECT * FROM maintenance_windows WHERE id = ?').get(id) as MaintRow;

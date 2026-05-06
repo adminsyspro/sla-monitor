@@ -79,6 +79,14 @@ export interface IncidentUpdate {
   createdBy: string
 }
 
+export interface RelatedIncident {
+  id: string
+  title: string
+  status: IncidentStatus
+  severity: IncidentSeverity
+  relationType: string
+}
+
 export interface Incident {
   id: string
   title: string
@@ -90,6 +98,12 @@ export interface Incident {
   updates: IncidentUpdate[]
   rootCause?: string
   postmortem?: string
+  impact?: string
+  resolution?: string
+  preventiveActions?: string
+  owner?: string
+  tags?: string[]
+  relatedIncidents?: RelatedIncident[]
   createdBy: string
 }
 

@@ -13,7 +13,6 @@ import {
   FileText,
   LayoutDashboard,
   Settings,
-  Shield,
   Target,
   Users,
 } from 'lucide-react'
@@ -69,7 +68,6 @@ const navigation: NavGroup[] = [
     title: 'Administration',
     items: [
       { title: 'Users', href: '/users', icon: Users, requiredRole: ['Administrator'] },
-      { title: 'Security', href: '/security', icon: Shield },
       { title: 'Settings', href: '/settings', icon: Settings },
     ],
   },

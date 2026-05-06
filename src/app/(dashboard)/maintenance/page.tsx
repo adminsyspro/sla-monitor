@@ -7,8 +7,6 @@ import {
   Clock,
   Edit,
   Loader2,
-  MoreHorizontal,
-  Pause,
   Play,
   Plus,
   Search,
@@ -26,9 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Separator } from '@/components/ui/separator'
 import {
   Dialog,
   DialogContent,
@@ -39,7 +35,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { cn, formatDate } from '@/lib/utils'
+import type { MonitorStatus } from '@/types'
 
 interface MaintenanceWindow {
   id: string
@@ -52,6 +48,14 @@ interface MaintenanceWindow {
   actualEnd?: string
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
   createdBy: string
+}
+
+interface MonitorOption {
+  id: string
+  name: string
+  url: string
+  status: MonitorStatus
+  enabled: boolean
 }
 
 function getStatusBadge(status: MaintenanceWindow['status']) {
@@ -67,7 +71,7 @@ function getStatusBadge(status: MaintenanceWindow['status']) {
       return (
         <Badge variant="default" className="gap-1 bg-blue-500">
           <Wrench className="h-3 w-3 animate-pulse" />
-          En cours
+          In progress
         </Badge>
       )
     case 'completed':
@@ -109,8 +113,8 @@ function getTimeUntil(date: string): string {
   const days = Math.floor(diffMs / 86400000)
   const hours = Math.floor((diffMs % 86400000) / 3600000)
 
-  if (days > 0) return `Dans ${days}j ${hours}h`
-  if (hours > 0) return `Dans ${hours}h`
+  if (days > 0) return `In ${days}d ${hours}h`
+  if (hours > 0) return `In ${hours}h`
   return 'Imminent'
 }
 
@@ -118,12 +122,15 @@ export default function MaintenancePage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'completed'>('all')
   const [maintenanceWindows, setMaintenanceWindows] = useState<MaintenanceWindow[]>([])
+  const [monitors, setMonitors] = useState<MonitorOption[]>([])
   const [loading, setLoading] = useState(true)
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [newMaintenance, setNewMaintenance] = useState({
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingMaintenance, setEditingMaintenance] = useState<MaintenanceWindow | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [maintenanceForm, setMaintenanceForm] = useState({
     title: '',
     description: '',
+    affectedMonitors: [] as string[],
     scheduledStart: '',
     scheduledEnd: '',
   })
@@ -143,40 +150,102 @@ export default function MaintenancePage() {
     }
   }
 
+  async function fetchMonitors() {
+    try {
+      const res = await fetch('/api/monitors')
+      if (res.ok) {
+        const data = await res.json()
+        setMonitors(Array.isArray(data) ? data : [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch monitors:', err)
+    }
+  }
+
   useEffect(() => {
     fetchMaintenance()
+    fetchMonitors()
   }, [])
 
-  async function handleCreate() {
-    if (!newMaintenance.title || !newMaintenance.scheduledStart || !newMaintenance.scheduledEnd) return
+  function resetForm() {
+    setMaintenanceForm({
+      title: '',
+      description: '',
+      affectedMonitors: [],
+      scheduledStart: '',
+      scheduledEnd: '',
+    })
+    setEditingMaintenance(null)
+  }
+
+  function toDatetimeLocalValue(value: string) {
+    const date = new Date(value)
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    return local.toISOString().slice(0, 16)
+  }
+
+  function openCreateDialog() {
+    resetForm()
+    setDialogOpen(true)
+  }
+
+  function openEditDialog(maintenance: MaintenanceWindow) {
+    setEditingMaintenance(maintenance)
+    setMaintenanceForm({
+      title: maintenance.title,
+      description: maintenance.description || '',
+      affectedMonitors: maintenance.affectedMonitors,
+      scheduledStart: toDatetimeLocalValue(maintenance.scheduledStart),
+      scheduledEnd: toDatetimeLocalValue(maintenance.scheduledEnd),
+    })
+    setDialogOpen(true)
+  }
+
+  function toggleAffectedMonitor(monitorId: string) {
+    setMaintenanceForm((prev) => ({
+      ...prev,
+      affectedMonitors: prev.affectedMonitors.includes(monitorId)
+        ? prev.affectedMonitors.filter((id) => id !== monitorId)
+        : [...prev.affectedMonitors, monitorId],
+    }))
+  }
+
+  async function handleSubmit() {
+    if (!maintenanceForm.title || !maintenanceForm.scheduledStart || !maintenanceForm.scheduledEnd) return
     try {
-      setCreating(true)
-      const res = await fetch('/api/maintenance', {
-        method: 'POST',
+      setSaving(true)
+      const url = editingMaintenance ? `/api/maintenance/${editingMaintenance.id}` : '/api/maintenance'
+      const res = await fetch(url, {
+        method: editingMaintenance ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: newMaintenance.title,
-          description: newMaintenance.description || undefined,
-          scheduledStart: new Date(newMaintenance.scheduledStart).toISOString(),
-          scheduledEnd: new Date(newMaintenance.scheduledEnd).toISOString(),
+          title: maintenanceForm.title,
+          description: maintenanceForm.description || undefined,
+          affectedMonitors: maintenanceForm.affectedMonitors,
+          scheduledStart: new Date(maintenanceForm.scheduledStart).toISOString(),
+          scheduledEnd: new Date(maintenanceForm.scheduledEnd).toISOString(),
         }),
       })
       if (res.ok) {
-        setCreateDialogOpen(false)
-        setNewMaintenance({ title: '', description: '', scheduledStart: '', scheduledEnd: '' })
+        setDialogOpen(false)
+        resetForm()
         fetchMaintenance()
+        fetchMonitors()
       }
     } catch (err) {
-      console.error('Failed to create maintenance:', err)
+      console.error('Failed to save maintenance:', err)
     } finally {
-      setCreating(false)
+      setSaving(false)
     }
   }
 
   async function handleStart(id: string) {
     try {
       const res = await fetch(`/api/maintenance/${id}?action=start`, { method: 'PATCH' })
-      if (res.ok) fetchMaintenance()
+      if (res.ok) {
+        fetchMaintenance()
+        fetchMonitors()
+      }
     } catch (err) {
       console.error('Failed to start maintenance:', err)
     }
@@ -185,7 +254,10 @@ export default function MaintenancePage() {
   async function handleComplete(id: string) {
     try {
       const res = await fetch(`/api/maintenance/${id}?action=complete`, { method: 'PATCH' })
-      if (res.ok) fetchMaintenance()
+      if (res.ok) {
+        fetchMaintenance()
+        fetchMonitors()
+      }
     } catch (err) {
       console.error('Failed to complete maintenance:', err)
     }
@@ -220,6 +292,7 @@ export default function MaintenancePage() {
 
   const completedCount = maintenanceWindows.filter((m) => m.status === 'completed').length
   const inProgressCount = maintenanceWindows.filter((m) => m.status === 'in_progress').length
+  const monitorNamesById = new Map(monitors.map((monitor) => [monitor.id, monitor.name]))
 
   // Compute total maintenance time for completed windows
   const totalMinutes = maintenanceWindows
@@ -258,7 +331,7 @@ export default function MaintenancePage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{inProgressCount}</p>
-                  <p className="text-sm text-muted-foreground">En cours</p>
+                  <p className="text-sm text-muted-foreground">In progress</p>
                 </div>
               </div>
             </CardContent>
@@ -305,14 +378,14 @@ export default function MaintenancePage() {
           <div className="flex items-center gap-2">
             <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
               <TabsList>
-                <TabsTrigger value="all">Toutes</TabsTrigger>
+                <TabsTrigger value="all">All</TabsTrigger>
                 <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
                 <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button onClick={() => setCreateDialogOpen(true)}>
+            <Button onClick={openCreateDialog}>
               <Plus className="mr-2 h-4 w-4" />
-              Planifier
+              Schedule
             </Button>
           </div>
         </div>
@@ -388,7 +461,11 @@ export default function MaintenancePage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="text-sm text-muted-foreground">Affected services:</span>
                             <Badge variant="secondary">
-                              {maintenance.affectedMonitors.length} affected service{maintenance.affectedMonitors.length > 1 ? 's' : ''}
+                              {maintenance.affectedMonitors
+                                .map((id) => monitorNamesById.get(id) || id)
+                                .slice(0, 3)
+                                .join(', ')}
+                              {maintenance.affectedMonitors.length > 3 ? ` +${maintenance.affectedMonitors.length - 3}` : ''}
                             </Badge>
                           </div>
                         )}
@@ -414,7 +491,7 @@ export default function MaintenancePage() {
                               <Play className="h-4 w-4 mr-1" />
                               Start
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(maintenance)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(maintenance.id)}>
@@ -442,32 +519,35 @@ export default function MaintenancePage() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   Schedule a maintenance window to inform your users
                 </p>
-                <Button className="mt-4" onClick={() => setCreateDialogOpen(true)}>
+                <Button className="mt-4" onClick={openCreateDialog}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Planifier une maintenance
+                  Schedule maintenance
                 </Button>
               </div>
             )}
           </div>
         )}
 
-        {/* Create Maintenance Dialog */}
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogContent>
+        {/* Maintenance Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) resetForm()
+        }}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Planifier une maintenance</DialogTitle>
+              <DialogTitle>{editingMaintenance ? 'Edit maintenance' : 'Schedule maintenance'}</DialogTitle>
               <DialogDescription>
-                Create a new scheduled maintenance window.
+                Declare a maintenance window and select the affected monitors.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Titre</Label>
+                <Label htmlFor="title">Title</Label>
                 <Input
                   id="title"
                   placeholder="Example: Database update"
-                  value={newMaintenance.title}
-                  onChange={(e) => setNewMaintenance((prev) => ({ ...prev, title: e.target.value }))}
+                  value={maintenanceForm.title}
+                  onChange={(e) => setMaintenanceForm((prev) => ({ ...prev, title: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
@@ -475,9 +555,38 @@ export default function MaintenancePage() {
                 <Textarea
                   id="description"
                   placeholder="Describe the planned work..."
-                  value={newMaintenance.description}
-                  onChange={(e) => setNewMaintenance((prev) => ({ ...prev, description: e.target.value }))}
+                  value={maintenanceForm.description}
+                  onChange={(e) => setMaintenanceForm((prev) => ({ ...prev, description: e.target.value }))}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Affected monitors</Label>
+                <div className="max-h-56 space-y-2 overflow-y-auto rounded-lg border p-3">
+                  {monitors.length > 0 ? (
+                    monitors.map((monitor) => (
+                      <label
+                        key={monitor.id}
+                        className="flex cursor-pointer items-center justify-between gap-3 rounded-md p-2 hover:bg-muted/60"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{monitor.name}</p>
+                          <p className="truncate text-xs text-muted-foreground">{monitor.url}</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4"
+                          checked={maintenanceForm.affectedMonitors.includes(monitor.id)}
+                          onChange={() => toggleAffectedMonitor(monitor.id)}
+                        />
+                      </label>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No monitor available.</p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Selected monitors will be shown as maintenance when the window starts.
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -485,8 +594,8 @@ export default function MaintenancePage() {
                   <Input
                     id="scheduledStart"
                     type="datetime-local"
-                    value={newMaintenance.scheduledStart}
-                    onChange={(e) => setNewMaintenance((prev) => ({ ...prev, scheduledStart: e.target.value }))}
+                    value={maintenanceForm.scheduledStart}
+                    onChange={(e) => setMaintenanceForm((prev) => ({ ...prev, scheduledStart: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -494,22 +603,22 @@ export default function MaintenancePage() {
                   <Input
                     id="scheduledEnd"
                     type="datetime-local"
-                    value={newMaintenance.scheduledEnd}
-                    onChange={(e) => setNewMaintenance((prev) => ({ ...prev, scheduledEnd: e.target.value }))}
+                    value={maintenanceForm.scheduledEnd}
+                    onChange={(e) => setMaintenanceForm((prev) => ({ ...prev, scheduledEnd: e.target.value }))}
                   />
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
               <Button
-                onClick={handleCreate}
-                disabled={creating || !newMaintenance.title || !newMaintenance.scheduledStart || !newMaintenance.scheduledEnd}
+                onClick={handleSubmit}
+                disabled={saving || !maintenanceForm.title || !maintenanceForm.scheduledStart || !maintenanceForm.scheduledEnd}
               >
-                {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Planifier
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {editingMaintenance ? 'Save changes' : 'Schedule'}
               </Button>
             </DialogFooter>
           </DialogContent>

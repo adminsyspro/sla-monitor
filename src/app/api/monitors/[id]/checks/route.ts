@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   const period = url.searchParams.get('period') || '24h';
 
   const periodMap: Record<string, number> = {
-    '1h': 3600, '6h': 21600, '24h': 86400, '7d': 604800, '30d': 2592000,
+    '1h': 3600, '6h': 21600, '24h': 86400, '7d': 604800, '30d': 2592000, '90d': 7776000, '1y': 31536000,
   };
   const seconds = periodMap[period] || 86400;
   const since = Math.floor(Date.now() / 1000) - seconds;

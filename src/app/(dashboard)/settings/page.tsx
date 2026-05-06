@@ -2,18 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Bell,
   Globe,
-  Key,
-  Mail,
   Moon,
   Palette,
   Save,
   Server,
-  Shield,
   Sun,
   User,
-  Webhook,
 } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { useAuthStore } from '@/stores/auth-store'
@@ -28,9 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/stores/app-store'
 import {
   Select,
@@ -167,10 +160,6 @@ export default function SettingsPage() {
               {[
                 { id: 'general', icon: User, label: 'General' },
                 { id: 'appearance', icon: Palette, label: 'Appearance' },
-                { id: 'notifications', icon: Bell, label: 'Notifications' },
-                { id: 'integrations', icon: Webhook, label: 'Integrations' },
-                { id: 'api', icon: Key, label: 'API' },
-                { id: 'security', icon: Shield, label: 'Security' },
                 ...(isAdmin ? [{ id: 'ldap', icon: Server, label: 'LDAP' }] : []),
               ].map((item) => (
                 <button
@@ -323,132 +312,6 @@ export default function SettingsPage() {
                       ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {activeTab === 'notifications' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notifications</CardTitle>
-                  <CardDescription>
-                    Configure how and when you are notified
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    {[
-                      {
-                        title: 'Email',
-                        description: 'Receive alerts by email',
-                        icon: Mail,
-                        enabled: true,
-                      },
-                      {
-                        title: 'Slack',
-                        description: 'Notifications in Slack',
-                        icon: Bell,
-                        enabled: false,
-                      },
-                      {
-                        title: 'Webhook',
-                        description: 'Custom HTTP calls',
-                        icon: Webhook,
-                        enabled: true,
-                      },
-                    ].map((channel) => (
-                      <div
-                        key={channel.title}
-                        className="flex items-center justify-between rounded-lg border p-4"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="rounded-lg bg-muted p-2">
-                            <channel.icon className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{channel.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {channel.description}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge
-                          variant={channel.enabled ? 'default' : 'secondary'}
-                        >
-                          {channel.enabled ? 'Enabled' : 'Disabled'}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {activeTab === 'api' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>API Keys</CardTitle>
-                  <CardDescription>
-                    Manage your API access keys
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="rounded-lg border p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium">Production key</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Created on January 15, 2024
-                        </p>
-                      </div>
-                      <Badge>Active</Badge>
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        value="sk_live_••••••••••••••••"
-                        readOnly
-                        className="font-mono"
-                      />
-                      <Button variant="outline">Copy</Button>
-                      <Button variant="destructive">Revoke</Button>
-                    </div>
-                  </div>
-                  <Button>
-                    <Key className="mr-2 h-4 w-4" />
-                    Create a new key
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {activeTab === 'integrations' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Integrations</CardTitle>
-                  <CardDescription>
-                    Connect your external tools
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Integrations will be available soon.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {activeTab === 'security' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Security</CardTitle>
-                  <CardDescription>
-                    Manage your account security
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Security settings will be available soon.
-                  </p>
                 </CardContent>
               </Card>
             )}

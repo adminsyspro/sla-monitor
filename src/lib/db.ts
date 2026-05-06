@@ -5,9 +5,20 @@ import { seedDefaultAdmin } from '@/lib/auth/seed';
 
 let db: Database.Database | null = null;
 
+function resolveDbPath(): string {
+  const configured = process.env.DATABASE_URL || process.env.SQLITE_PATH;
+  if (!configured) return path.join(process.cwd(), 'data', 'sla-monitor.db');
+
+  const rawPath = configured.startsWith('file:') ? configured.slice('file:'.length) : configured;
+  const normalizedPath = rawPath.replace(/^\/\/+/, '/');
+  return path.isAbsolute(normalizedPath)
+    ? normalizedPath
+    : path.join(process.cwd(), normalizedPath);
+}
+
 export function getDb(): Database.Database {
   if (!db) {
-    const dbPath = path.join(process.cwd(), 'data', 'sla-monitor.db');
+    const dbPath = resolveDbPath();
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     db = new Database(dbPath);
     db.pragma('journal_mode = WAL');
@@ -101,11 +112,28 @@ function initSchema(db: Database.Database) {
       resolved_at       INTEGER DEFAULT NULL,
       root_cause        TEXT DEFAULT NULL,
       postmortem        TEXT DEFAULT NULL,
+      impact            TEXT DEFAULT '',
+      resolution        TEXT DEFAULT '',
+      preventive_actions TEXT DEFAULT '',
+      owner             TEXT DEFAULT '',
+      tags              TEXT DEFAULT '[]',
       created_by        TEXT NOT NULL DEFAULT 'system',
       created_at        INTEGER NOT NULL DEFAULT (unixepoch()),
       updated_at        INTEGER NOT NULL DEFAULT (unixepoch())
     );
     CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status);
+
+    -- Incident relationships used for root cause correlation
+    CREATE TABLE IF NOT EXISTS incident_links (
+      id                 TEXT PRIMARY KEY,
+      source_incident_id TEXT NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
+      target_incident_id TEXT NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
+      relation_type      TEXT NOT NULL DEFAULT 'related',
+      created_at         INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(source_incident_id, target_incident_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_incident_links_source ON incident_links(source_incident_id);
+    CREATE INDEX IF NOT EXISTS idx_incident_links_target ON incident_links(target_incident_id);
 
     -- Incident Timeline Updates
     CREATE TABLE IF NOT EXISTS incident_updates (
@@ -150,7 +178,7 @@ function initSchema(db: Database.Database) {
     -- Status Page Configuration (singleton)
     CREATE TABLE IF NOT EXISTS status_page_config (
       id                 TEXT PRIMARY KEY DEFAULT 'default',
-      enabled            INTEGER NOT NULL DEFAULT 0,
+      enabled            INTEGER NOT NULL DEFAULT 1,
       title              TEXT NOT NULL DEFAULT 'Status',
       description        TEXT DEFAULT '',
       subdomain          TEXT DEFAULT '',
@@ -158,6 +186,16 @@ function initSchema(db: Database.Database) {
       logo_url           TEXT DEFAULT '',
       theme              TEXT DEFAULT 'auto',
       accent_color       TEXT DEFAULT '#3b82f6',
+      background_color   TEXT DEFAULT '#f8fafc',
+      header_background  TEXT DEFAULT '#ffffff',
+      header_text_color  TEXT DEFAULT '#0f172a',
+      card_background    TEXT DEFAULT '#ffffff',
+      border_radius      TEXT DEFAULT 'large',
+      operational_message TEXT DEFAULT 'All systems are operational',
+      degraded_message   TEXT DEFAULT 'Some systems are experiencing issues',
+      major_message      TEXT DEFAULT 'Issues are affecting our services',
+      maintenance_message TEXT DEFAULT 'Maintenance in progress',
+      footer_text        TEXT DEFAULT '',
       show_uptime        INTEGER NOT NULL DEFAULT 1,
       show_response_time INTEGER NOT NULL DEFAULT 1,
       show_incidents     INTEGER NOT NULL DEFAULT 1,
@@ -180,6 +218,55 @@ function initSchema(db: Database.Database) {
   if (!hasMetadata) {
     db.prepare('ALTER TABLE monitor_checks ADD COLUMN metadata TEXT DEFAULT \'{}\'').run();
   }
+
+  const incidentColumns = db.prepare('PRAGMA table_info(incidents)').all();
+  const hasIncidentColumn = (name: string) => incidentColumns.some((col: any) => col.name === name);
+  if (!hasIncidentColumn('impact')) {
+    db.prepare("ALTER TABLE incidents ADD COLUMN impact TEXT DEFAULT ''").run();
+  }
+  if (!hasIncidentColumn('resolution')) {
+    db.prepare("ALTER TABLE incidents ADD COLUMN resolution TEXT DEFAULT ''").run();
+  }
+  if (!hasIncidentColumn('preventive_actions')) {
+    db.prepare("ALTER TABLE incidents ADD COLUMN preventive_actions TEXT DEFAULT ''").run();
+  }
+  if (!hasIncidentColumn('owner')) {
+    db.prepare("ALTER TABLE incidents ADD COLUMN owner TEXT DEFAULT ''").run();
+  }
+  if (!hasIncidentColumn('tags')) {
+    db.prepare("ALTER TABLE incidents ADD COLUMN tags TEXT DEFAULT '[]'").run();
+  }
+
+  const statusPageColumns = db.prepare('PRAGMA table_info(status_page_config)').all();
+  const hasStatusPageColumn = (name: string) => statusPageColumns.some((col: any) => col.name === name);
+  const addStatusPageColumn = (name: string, definition: string) => {
+    if (!hasStatusPageColumn(name)) {
+      db.prepare(`ALTER TABLE status_page_config ADD COLUMN ${name} ${definition}`).run();
+    }
+  };
+  addStatusPageColumn('background_color', "TEXT DEFAULT '#f8fafc'");
+  addStatusPageColumn('header_background', "TEXT DEFAULT '#ffffff'");
+  addStatusPageColumn('header_text_color', "TEXT DEFAULT '#0f172a'");
+  addStatusPageColumn('card_background', "TEXT DEFAULT '#ffffff'");
+  addStatusPageColumn('border_radius', "TEXT DEFAULT 'large'");
+  addStatusPageColumn('operational_message', "TEXT DEFAULT 'All systems are operational'");
+  addStatusPageColumn('degraded_message', "TEXT DEFAULT 'Some systems are experiencing issues'");
+  addStatusPageColumn('major_message', "TEXT DEFAULT 'Issues are affecting our services'");
+  addStatusPageColumn('maintenance_message', "TEXT DEFAULT 'Maintenance in progress'");
+  addStatusPageColumn('footer_text', "TEXT DEFAULT ''");
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS incident_links (
+      id                 TEXT PRIMARY KEY,
+      source_incident_id TEXT NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
+      target_incident_id TEXT NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
+      relation_type      TEXT NOT NULL DEFAULT 'related',
+      created_at         INTEGER NOT NULL DEFAULT (unixepoch()),
+      UNIQUE(source_incident_id, target_incident_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_incident_links_source ON incident_links(source_incident_id);
+    CREATE INDEX IF NOT EXISTS idx_incident_links_target ON incident_links(target_incident_id);
+  `);
 
   seedDefaultAdmin(db);
 }
