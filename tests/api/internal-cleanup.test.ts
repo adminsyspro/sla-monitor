@@ -10,11 +10,9 @@ vi.mock('@/lib/db', () => {
     __setDb: (d: Database.Database) => { db = d; },
   };
 });
-vi.mock('@/lib/auth/prober-token', () => ({
-  validateProberToken: (header: string | null) => header === 'Bearer test-token',
-}));
 
 import * as dbMod from '@/lib/db';
+import { getOrCreateProberToken } from '@/lib/auth/prober-token';
 
 function makeDb(): Database.Database {
   const db = new Database(':memory:');
@@ -41,7 +39,7 @@ function seedChecks(db: Database.Database, count: number, ageDays: number) {
   for (let i = 0; i < count; i++) stmt.run(`c${ageDays}-${i}`, 'm1', cutoff + i, 'operational');
 }
 
-function makeReq(token = 'test-token'): Request {
+function makeReq(token: string): Request {
   return new Request('http://x/api/internal/cleanup', {
     method: 'POST',
     headers: { authorization: `Bearer ${token}` },
@@ -49,9 +47,11 @@ function makeReq(token = 'test-token'): Request {
 }
 
 describe('POST /api/internal/cleanup', () => {
+  let token: string;
   beforeEach(() => {
     const db = makeDb();
     (dbMod as unknown as { __setDb: (d: Database.Database) => void }).__setDb(db);
+    token = getOrCreateProberToken(db);
   });
 
   it('rejects unauthorized callers', async () => {
@@ -63,7 +63,7 @@ describe('POST /api/internal/cleanup', () => {
     const db = (dbMod as unknown as { getDb: () => Database.Database }).getDb();
     setRetentionDays(db, null);
     seedChecks(db, 10, 100);
-    const res = await POST(makeReq());
+    const res = await POST(makeReq(token));
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body).toMatchObject({ deleted: 0, retention_days: null, skipped: 'unlimited' });
@@ -75,7 +75,7 @@ describe('POST /api/internal/cleanup', () => {
     setRetentionDays(db, 30);
     seedChecks(db, 50, 100); // 100 days old → must be deleted
     seedChecks(db, 50, 5);   // 5 days old → must remain
-    const res = await POST(makeReq());
+    const res = await POST(makeReq(token));
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body).toMatchObject({ deleted: 50, retention_days: 30 });
@@ -86,11 +86,11 @@ describe('POST /api/internal/cleanup', () => {
     const db = (dbMod as unknown as { getDb: () => Database.Database }).getDb();
     setRetentionDays(db, 30);
     seedChecks(db, 60_000, 100);
-    const res1 = await POST(makeReq());
+    const res1 = await POST(makeReq(token));
     const body1 = await res1.json();
     expect(body1.deleted).toBe(50_000);
     expect(db.prepare('SELECT COUNT(*) AS n FROM monitor_checks').get()).toMatchObject({ n: 10_000 });
-    const res2 = await POST(makeReq());
+    const res2 = await POST(makeReq(token));
     const body2 = await res2.json();
     expect(body2.deleted).toBe(10_000);
     expect(db.prepare('SELECT COUNT(*) AS n FROM monitor_checks').get()).toMatchObject({ n: 0 });
@@ -100,7 +100,7 @@ describe('POST /api/internal/cleanup', () => {
     const db = (dbMod as unknown as { getDb: () => Database.Database }).getDb();
     seedChecks(db, 10, 200); // older than 90d → deleted
     seedChecks(db, 10, 30);  // within 90d → kept
-    const res = await POST(makeReq());
+    const res = await POST(makeReq(token));
     const body = await res.json();
     expect(body).toMatchObject({ deleted: 10, retention_days: 90 });
   });

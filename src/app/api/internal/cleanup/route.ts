@@ -5,9 +5,9 @@ import { getRetentionDays } from '@/lib/settings';
 
 const PER_TICK_LIMIT = 50000;
 
-export async function POST(request: NextRequest | Request) {
+export async function POST(request: NextRequest) {
   const db = getDb();
-  const auth = (request as Request).headers.get('authorization');
+  const auth = request.headers.get('authorization');
   if (!validateProberToken(auth, db)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
