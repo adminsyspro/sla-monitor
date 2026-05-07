@@ -13,6 +13,7 @@ import {
 import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { UptimeBar } from '@/components/monitors/uptime-bar'
+import { LatencySparkline, type LatencyPoint } from '@/components/monitors/latency-sparkline'
 import { ALL_WINDOWS, windowToDays, type WindowPreset } from '@/lib/window'
 import { cn, formatDate } from '@/lib/utils'
 import type { MonitorStatus } from '@/types'
@@ -30,6 +31,7 @@ interface PublicMonitor {
   status: MonitorStatus
   uptime: number
   uptimeHistory: UptimePoint[]
+  trend: LatencyPoint[]
 }
 
 interface ServiceGroup {
@@ -338,6 +340,9 @@ export default function PublicStatusPage() {
                           <span>{monitor.name}</span>
                           <div className="flex items-center gap-4">
                             <span className="text-sm text-muted-foreground">{monitor.uptime.toFixed(2)}% uptime</span>
+                            <div className="hidden md:block w-72">
+                              <LatencySparkline data={monitor.trend ?? []} responsive height={28} />
+                            </div>
                             <Badge
                               variant={getMonitorBadgeVariant(monitor.status)}
                             >

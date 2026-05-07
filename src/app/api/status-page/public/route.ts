@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db';
 import { parseJsonArray, fromEpoch } from '@/lib/api-helpers';
 import { parseWindow, windowToDays } from '@/lib/window';
 import { applyMaintenanceTransitions } from '@/lib/maintenance';
+import { computeLatencyTrend } from '@/lib/latency-trend';
 
 function mapUptimeHistory(days: Array<{
   date: string; total: number; ok: number | null; avg_response_time: number | null;
@@ -88,6 +89,7 @@ export async function GET(request: NextRequest) {
       id: m.id, name: m.name, status: m.status, groupId: m.group_id,
       uptime: stats.total > 0 ? Math.round((stats.ok / stats.total) * 100 * 100) / 100 : 100,
       uptimeHistory: mapUptimeHistory(history),
+      trend: computeLatencyTrend(db, m.id),
     };
   });
 

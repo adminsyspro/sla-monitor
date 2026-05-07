@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { computeLatencyTrend } from '@/lib/latency-trend';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -58,33 +59,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   const totalChecks = summary.total_checks || 1;
   const uptime = ((totalChecks - (summary.total_failures || 0)) / totalChecks) * 100;
 
-  // Latency trend — fixed window of the last 60 minutes (one bucket per minute),
-  // regardless of `period`.
-  const BUCKET_SECONDS = 60;
-  const TREND_BUCKETS = 60;
-  const nowSec = Math.floor(Date.now() / 1000);
-  const nowBucket = Math.floor(nowSec / BUCKET_SECONDS) * BUCKET_SECONDS;
-  const trendSince = nowBucket - (TREND_BUCKETS - 1) * BUCKET_SECONDS;
-
-  const trendRows = db.prepare(`
-    SELECT
-      (timestamp / ${BUCKET_SECONDS}) * ${BUCKET_SECONDS} AS bucket_ts,
-      ROUND(AVG(response_time), 0) AS avg_ms
-    FROM monitor_checks
-    WHERE monitor_id = ? AND timestamp >= ?
-    GROUP BY bucket_ts
-    ORDER BY bucket_ts ASC
-  `).all(id, trendSince) as Array<{ bucket_ts: number; avg_ms: number | null }>;
-
-  const trendMap = new Map(trendRows.map(r => [r.bucket_ts, r.avg_ms]));
-  const trend = Array.from({ length: TREND_BUCKETS }, (_, i) => {
-    const ts = nowBucket - (TREND_BUCKETS - 1 - i) * BUCKET_SECONDS;
-    const ms = trendMap.get(ts);
-    return {
-      date: new Date(ts * 1000).toISOString(),
-      ms: ms == null ? null : ms,
-    };
-  });
+  const trend = computeLatencyTrend(db, id);
 
   return NextResponse.json({
     monitorId: id,
