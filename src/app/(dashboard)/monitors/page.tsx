@@ -694,11 +694,11 @@ export default function MonitorsPage() {
                           </p>
                           <p className="text-xs text-muted-foreground">uptime</p>
                         </div>
-                        <div className="hidden md:flex w-64 items-center justify-end">
+                        <div className="hidden md:block w-[440px]">
                           <LatencySparkline
                             data={uptimeMap[monitor.id]?.trend ?? []}
-                            width={240}
-                            height={28}
+                            responsive
+                            height={32}
                           />
                         </div>
                         <div className="text-right">

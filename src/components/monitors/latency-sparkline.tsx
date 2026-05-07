@@ -52,9 +52,14 @@ export function LatencySparkline({
 
   const usable = useMemo(() => {
     if (!data) return null
-    const nonNull = data.filter((p) => p.ms != null && p.ms > 0)
-    if (nonNull.length < 2) return null
-    return data
+    const isReal = (p: LatencyPoint) => p.ms != null && p.ms > 0
+    const firstIdx = data.findIndex(isReal)
+    if (firstIdx < 0) return null
+    let lastIdx = data.length - 1
+    while (lastIdx > firstIdx && !isReal(data[lastIdx])) lastIdx--
+    const trimmed = data.slice(firstIdx, lastIdx + 1)
+    if (trimmed.filter(isReal).length < 2) return null
+    return trimmed
   }, [data])
 
   if (!usable) return null
