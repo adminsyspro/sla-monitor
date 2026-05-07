@@ -32,7 +32,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { MonitorCard } from '@/components/monitors/monitor-card'
 import { UptimeBar } from '@/components/monitors/uptime-bar'
-import { LatencySparkline } from '@/components/monitors/latency-sparkline'
+import { LatencySparkline, type LatencyPoint } from '@/components/monitors/latency-sparkline'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -193,7 +193,7 @@ export default function MonitorsPage() {
 
   // Per-monitor uptime cache for list view
   const [uptimeMap, setUptimeMap] = useState<
-    Record<string, { uptime: number; avgResponseTime: number; daily: Array<{ date: string; ms: number }> }>
+    Record<string, { uptime: number; avgResponseTime: number; daily: LatencyPoint[] }>
   >({})
 
   // Window selector
