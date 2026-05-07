@@ -58,6 +58,32 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   const totalChecks = summary.total_checks || 1;
   const uptime = ((totalChecks - (summary.total_failures || 0)) / totalChecks) * 100;
 
+  // Hourly latency trend — fixed window of the last 60 hours, regardless of `period`.
+  const TREND_BUCKETS = 60;
+  const nowSec = Math.floor(Date.now() / 1000);
+  const nowHour = Math.floor(nowSec / 3600) * 3600;
+  const trendSince = nowHour - (TREND_BUCKETS - 1) * 3600;
+
+  const hourlyRows = db.prepare(`
+    SELECT
+      (timestamp / 3600) * 3600 AS bucket_ts,
+      ROUND(AVG(response_time), 0) AS avg_ms
+    FROM monitor_checks
+    WHERE monitor_id = ? AND timestamp >= ?
+    GROUP BY bucket_ts
+    ORDER BY bucket_ts ASC
+  `).all(id, trendSince) as Array<{ bucket_ts: number; avg_ms: number | null }>;
+
+  const hourlyMap = new Map(hourlyRows.map(r => [r.bucket_ts, r.avg_ms]));
+  const hourlyTrend = Array.from({ length: TREND_BUCKETS }, (_, i) => {
+    const ts = nowHour - (TREND_BUCKETS - 1 - i) * 3600;
+    const ms = hourlyMap.get(ts);
+    return {
+      date: new Date(ts * 1000).toISOString(),
+      ms: ms == null ? null : ms,
+    };
+  });
+
   return NextResponse.json({
     monitorId: id,
     period,
@@ -75,5 +101,6 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       failures: d.failures,
       avgResponseTime: d.avg_response_time || 0,
     })),
+    hourlyTrend,
   });
 }

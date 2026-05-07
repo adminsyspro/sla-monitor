@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 
 export interface LatencyPoint {
   date: string
-  ms: number
+  ms: number | null
 }
 
 interface LatencySparklineProps {
@@ -24,13 +24,17 @@ function SparklineTooltip({ active, payload }: any) {
   return (
     <div className="rounded-md border bg-background px-2 py-1 text-xs shadow-md">
       <p className="font-medium">
-        {new Date(point.date).toLocaleDateString('en-US', {
+        {new Date(point.date).toLocaleString('en-US', {
           day: 'numeric',
           month: 'short',
-          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
         })}
       </p>
-      <p className="text-muted-foreground">{point.ms}ms</p>
+      <p className="text-muted-foreground">
+        {point.ms == null ? 'No data' : `${point.ms}ms`}
+      </p>
     </div>
   )
 }
@@ -47,9 +51,10 @@ export function LatencySparkline({
   const gradientId = `latency-spark-${id.replace(/:/g, '')}`
 
   const usable = useMemo(() => {
-    if (!data || data.length < 2) return null
-    const hasSignal = data.some((p) => (p.ms ?? 0) > 0)
-    return hasSignal ? data : null
+    if (!data) return null
+    const nonNull = data.filter((p) => p.ms != null && p.ms > 0)
+    if (nonNull.length < 2) return null
+    return data
   }, [data])
 
   if (!usable) return null

@@ -4,10 +4,10 @@ import { Activity, Clock, Zap } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { UptimeBar } from './uptime-bar'
-import { LatencySparkline } from './latency-sparkline'
+import { LatencySparkline, type LatencyPoint } from './latency-sparkline'
 import { cn } from '@/lib/utils'
 import type { Monitor, MonitorStatus } from '@/types'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { type WindowPreset, windowToDays } from '@/lib/window'
 
 interface UptimeDay {
@@ -26,6 +26,7 @@ interface UptimeApiResponse {
     uptime: number
     avgResponseTime: number
   }>
+  hourlyTrend: LatencyPoint[]
 }
 
 interface MonitorCardProps {
@@ -71,6 +72,7 @@ function getStatusLabel(status: MonitorStatus): string {
 
 export function MonitorCard({ monitor, window, onClick, compact = false }: MonitorCardProps) {
   const [uptimeData, setUptimeData] = useState<UptimeDay[]>([])
+  const [sparklinePoints, setSparklinePoints] = useState<LatencyPoint[]>([])
   const [avgUptime, setAvgUptime] = useState<number | null>(null)
   const [avgResponseTime, setAvgResponseTime] = useState<number | null>(null)
 
@@ -88,12 +90,14 @@ export function MonitorCard({ monitor, window, onClick, compact = false }: Monit
             responseTime: d.avgResponseTime || undefined,
           }))
         )
+        setSparklinePoints(body.hourlyTrend ?? [])
         setAvgUptime(body.uptime)
         setAvgResponseTime(body.avgResponseTime || 0)
       })
       .catch(() => {
         if (cancelled) return
         setUptimeData([])
+        setSparklinePoints([])
         setAvgUptime(null)
         setAvgResponseTime(null)
       })
@@ -101,11 +105,6 @@ export function MonitorCard({ monitor, window, onClick, compact = false }: Monit
       cancelled = true
     }
   }, [monitor.id, window])
-
-  const sparklinePoints = useMemo(
-    () => uptimeData.map((d) => ({ date: d.date, ms: d.responseTime ?? 0 })),
-    [uptimeData]
-  )
 
   if (compact) {
     return (

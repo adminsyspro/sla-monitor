@@ -89,6 +89,7 @@ interface UptimeResponse {
   minResponseTime: number
   maxResponseTime: number
   dailyData: UptimeData[]
+  hourlyTrend: LatencyPoint[]
 }
 
 interface MonitorFormState {
@@ -193,7 +194,7 @@ export default function MonitorsPage() {
 
   // Per-monitor uptime cache for list view
   const [uptimeMap, setUptimeMap] = useState<
-    Record<string, { uptime: number; avgResponseTime: number; daily: LatencyPoint[] }>
+    Record<string, { uptime: number; avgResponseTime: number; trend: LatencyPoint[] }>
   >({})
 
   // Window selector
@@ -243,7 +244,7 @@ export default function MonitorsPage() {
             [m.id]: {
               uptime: data.uptime,
               avgResponseTime: data.avgResponseTime,
-              daily: (data.dailyData ?? []).map((d) => ({ date: d.date, ms: d.avgResponseTime ?? 0 })),
+              trend: data.hourlyTrend ?? [],
             },
           }))
         }
@@ -423,18 +424,10 @@ export default function MonitorsPage() {
     dns: monitors.filter((m) => m.type === 'dns').length,
   }), [monitors])
 
-  const detailSparklinePoints = useMemo<LatencyPoint[]>(
-    () =>
-      (detailUptime?.dailyData ?? []).map((d) => ({
-        date: d.date,
-        ms: d.avgResponseTime ?? 0,
-      })),
-    [detailUptime]
-  )
+  const detailSparklinePoints: LatencyPoint[] = detailUptime?.hourlyTrend ?? []
 
   const hasLatencyTrend =
-    detailSparklinePoints.length >= 2 &&
-    detailSparklinePoints.some((p) => p.ms > 0)
+    detailSparklinePoints.filter((p) => p.ms != null && p.ms > 0).length >= 2
 
   const handleMonitorClick = (monitor: Monitor) => {
     setSelectedMonitor(monitor)
@@ -703,7 +696,7 @@ export default function MonitorsPage() {
                         </div>
                         <div className="hidden md:flex w-36 items-center justify-end">
                           <LatencySparkline
-                            data={uptimeMap[monitor.id]?.daily ?? []}
+                            data={uptimeMap[monitor.id]?.trend ?? []}
                             width={140}
                             height={20}
                           />
@@ -848,7 +841,7 @@ export default function MonitorsPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium">Latency Trend</h4>
-                        <span className="text-sm text-muted-foreground">Last {currentWindow}</span>
+                        <span className="text-sm text-muted-foreground">Last 60h</span>
                       </div>
                       <LatencySparkline data={detailSparklinePoints} responsive height={80} />
                     </div>
