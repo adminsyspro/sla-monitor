@@ -191,7 +191,9 @@ export default function MonitorsPage() {
   const [detailLoading, setDetailLoading] = useState(false)
 
   // Per-monitor uptime cache for list view
-  const [uptimeMap, setUptimeMap] = useState<Record<string, { uptime: number; avgResponseTime: number }>>({})
+  const [uptimeMap, setUptimeMap] = useState<
+    Record<string, { uptime: number; avgResponseTime: number; daily: Array<{ date: string; ms: number }> }>
+  >({})
 
   // Window selector
   const router = useRouter()
@@ -232,7 +234,11 @@ export default function MonitorsPage() {
           const data: UptimeResponse = await res.json()
           setUptimeMap((prev) => ({
             ...prev,
-            [m.id]: { uptime: data.uptime, avgResponseTime: data.avgResponseTime },
+            [m.id]: {
+              uptime: data.uptime,
+              avgResponseTime: data.avgResponseTime,
+              daily: (data.dailyData ?? []).map((d) => ({ date: d.date, ms: d.avgResponseTime ?? 0 })),
+            },
           }))
         }
       } catch { /* ignore */ }
