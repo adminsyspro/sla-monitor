@@ -4,9 +4,10 @@ import { Activity, Clock, Zap } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { UptimeBar } from './uptime-bar'
+import { LatencySparkline } from './latency-sparkline'
 import { cn } from '@/lib/utils'
 import type { Monitor, MonitorStatus } from '@/types'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { type WindowPreset, windowToDays } from '@/lib/window'
 
 interface UptimeDay {
@@ -100,6 +101,11 @@ export function MonitorCard({ monitor, window, onClick, compact = false }: Monit
       cancelled = true
     }
   }, [monitor.id, window])
+
+  const sparklinePoints = useMemo(
+    () => uptimeData.map((d) => ({ date: d.date, ms: d.responseTime ?? 0 })),
+    [uptimeData]
+  )
 
   if (compact) {
     return (
@@ -205,9 +211,12 @@ export function MonitorCard({ monitor, window, onClick, compact = false }: Monit
               <Zap className="h-3.5 w-3.5" />
               <span className="text-xs">Response</span>
             </div>
-            <p className="text-sm font-medium">
-              {avgResponseTime !== null && avgResponseTime > 0 ? `${avgResponseTime}ms` : '—'}
-            </p>
+            <div className="flex items-center gap-2">
+              <LatencySparkline data={sparklinePoints} width={60} height={20} />
+              <p className="text-sm font-medium">
+                {avgResponseTime !== null && avgResponseTime > 0 ? `${avgResponseTime}ms` : '—'}
+              </p>
+            </div>
           </div>
         </div>
       </CardContent>
