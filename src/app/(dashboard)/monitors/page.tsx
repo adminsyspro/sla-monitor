@@ -225,6 +225,11 @@ export default function MonitorsPage() {
     fetchMonitors()
   }, [fetchMonitors])
 
+  useEffect(() => {
+    const id = setInterval(fetchMonitors, 30_000)
+    return () => clearInterval(id)
+  }, [fetchMonitors])
+
   // Fetch uptime for each monitor (list view stats)
   useEffect(() => {
     if (monitors.length === 0) return
@@ -683,10 +688,10 @@ export default function MonitorsPage() {
                           </p>
                           <p className="text-xs text-muted-foreground">uptime</p>
                         </div>
-                        <div className="hidden md:flex w-20 items-center justify-end">
+                        <div className="hidden md:flex w-36 items-center justify-end">
                           <LatencySparkline
                             data={uptimeMap[monitor.id]?.daily ?? []}
-                            width={80}
+                            width={140}
                             height={20}
                           />
                         </div>

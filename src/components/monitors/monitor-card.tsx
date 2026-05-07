@@ -212,7 +212,7 @@ export function MonitorCard({ monitor, window, onClick, compact = false }: Monit
               <span className="text-xs">Response</span>
             </div>
             <div className="flex items-center gap-2 min-w-0">
-              <LatencySparkline data={sparklinePoints} width={60} height={20} />
+              <LatencySparkline data={sparklinePoints} width={80} height={20} />
               <p className="text-sm font-medium truncate">
                 {avgResponseTime !== null && avgResponseTime > 0 ? `${avgResponseTime}ms` : '—'}
               </p>
