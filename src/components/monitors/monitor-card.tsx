@@ -26,7 +26,7 @@ interface UptimeApiResponse {
     uptime: number
     avgResponseTime: number
   }>
-  hourlyTrend: LatencyPoint[]
+  trend: LatencyPoint[]
 }
 
 interface MonitorCardProps {
@@ -90,7 +90,7 @@ export function MonitorCard({ monitor, window, onClick, compact = false }: Monit
             responseTime: d.avgResponseTime || undefined,
           }))
         )
-        setSparklinePoints(body.hourlyTrend ?? [])
+        setSparklinePoints(body.trend ?? [])
         setAvgUptime(body.uptime)
         setAvgResponseTime(body.avgResponseTime || 0)
       })
@@ -216,10 +216,10 @@ export function MonitorCard({ monitor, window, onClick, compact = false }: Monit
           </div>
         </div>
 
-        {/* Latency trend (60h) */}
+        {/* Latency trend (last 60 min) */}
         {sparklinePoints.filter((p) => p.ms != null && p.ms > 0).length >= 2 && (
           <div className="space-y-1 pt-1">
-            <span className="text-xs text-muted-foreground">Latency · 60h</span>
+            <span className="text-xs text-muted-foreground">Latency · 60 min</span>
             <LatencySparkline data={sparklinePoints} responsive height={40} />
           </div>
         )}

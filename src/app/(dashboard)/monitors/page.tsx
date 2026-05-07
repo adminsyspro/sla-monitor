@@ -89,7 +89,7 @@ interface UptimeResponse {
   minResponseTime: number
   maxResponseTime: number
   dailyData: UptimeData[]
-  hourlyTrend: LatencyPoint[]
+  trend: LatencyPoint[]
 }
 
 interface MonitorFormState {
@@ -244,7 +244,7 @@ export default function MonitorsPage() {
             [m.id]: {
               uptime: data.uptime,
               avgResponseTime: data.avgResponseTime,
-              trend: data.hourlyTrend ?? [],
+              trend: data.trend ?? [],
             },
           }))
         }
@@ -424,7 +424,7 @@ export default function MonitorsPage() {
     dns: monitors.filter((m) => m.type === 'dns').length,
   }), [monitors])
 
-  const detailSparklinePoints: LatencyPoint[] = detailUptime?.hourlyTrend ?? []
+  const detailSparklinePoints: LatencyPoint[] = detailUptime?.trend ?? []
 
   const hasLatencyTrend =
     detailSparklinePoints.filter((p) => p.ms != null && p.ms > 0).length >= 2
@@ -841,7 +841,7 @@ export default function MonitorsPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium">Latency Trend</h4>
-                        <span className="text-sm text-muted-foreground">Last 60h</span>
+                        <span className="text-sm text-muted-foreground">Last 60 min</span>
                       </div>
                       <LatencySparkline data={detailSparklinePoints} responsive height={100} />
                     </div>
