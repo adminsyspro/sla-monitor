@@ -423,6 +423,19 @@ export default function MonitorsPage() {
     dns: monitors.filter((m) => m.type === 'dns').length,
   }), [monitors])
 
+  const detailSparklinePoints = useMemo<LatencyPoint[]>(
+    () =>
+      (detailUptime?.dailyData ?? []).map((d) => ({
+        date: d.date,
+        ms: d.avgResponseTime ?? 0,
+      })),
+    [detailUptime]
+  )
+
+  const hasLatencyTrend =
+    detailSparklinePoints.length >= 2 &&
+    detailSparklinePoints.some((p) => p.ms > 0)
+
   const handleMonitorClick = (monitor: Monitor) => {
     setSelectedMonitor(monitor)
     setIsDetailSheetOpen(true)
@@ -829,6 +842,17 @@ export default function MonitorsPage() {
                       <p className="text-xs text-muted-foreground">Incidents 30j</p>
                     </div>
                   </div>
+
+                  {/* Latency Trend */}
+                  {hasLatencyTrend && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Latency Trend</h4>
+                        <span className="text-sm text-muted-foreground">Last {currentWindow}</span>
+                      </div>
+                      <LatencySparkline data={detailSparklinePoints} responsive height={80} />
+                    </div>
+                  )}
 
                   {/* Uptime Bar */}
                   <div className="space-y-2">
