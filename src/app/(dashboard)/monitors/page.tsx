@@ -32,6 +32,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { MonitorCard } from '@/components/monitors/monitor-card'
 import { UptimeBar } from '@/components/monitors/uptime-bar'
+import { LatencySparkline } from '@/components/monitors/latency-sparkline'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -681,6 +682,13 @@ export default function MonitorsPage() {
                             {uptimeMap[monitor.id] ? uptimeMap[monitor.id].uptime.toFixed(2) + '%' : '—'}
                           </p>
                           <p className="text-xs text-muted-foreground">uptime</p>
+                        </div>
+                        <div className="hidden md:flex w-20 items-center justify-end">
+                          <LatencySparkline
+                            data={uptimeMap[monitor.id]?.daily ?? []}
+                            width={80}
+                            height={20}
+                          />
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium">
