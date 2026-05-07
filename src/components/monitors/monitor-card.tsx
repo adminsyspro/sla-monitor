@@ -205,19 +205,24 @@ export function MonitorCard({ monitor, window, onClick, compact = false }: Monit
             </div>
             <p className="text-sm font-medium">{monitor.interval}s</p>
           </div>
-          <div className="space-y-1 min-w-0">
+          <div className="space-y-1">
             <div className="flex items-center gap-1 text-muted-foreground">
               <Zap className="h-3.5 w-3.5" />
               <span className="text-xs">Response</span>
             </div>
-            <div className="flex items-center gap-2 min-w-0">
-              <LatencySparkline data={sparklinePoints} width={80} height={20} />
-              <p className="text-sm font-medium truncate">
-                {avgResponseTime !== null && avgResponseTime > 0 ? `${avgResponseTime}ms` : '—'}
-              </p>
-            </div>
+            <p className="text-sm font-medium">
+              {avgResponseTime !== null && avgResponseTime > 0 ? `${avgResponseTime}ms` : '—'}
+            </p>
           </div>
         </div>
+
+        {/* Latency trend (60h) */}
+        {sparklinePoints.filter((p) => p.ms != null && p.ms > 0).length >= 2 && (
+          <div className="space-y-1 pt-1">
+            <span className="text-xs text-muted-foreground">Latency · 60h</span>
+            <LatencySparkline data={sparklinePoints} responsive height={40} />
+          </div>
+        )}
       </CardContent>
     </Card>
   )
